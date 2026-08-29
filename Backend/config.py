@@ -1,0 +1,167 @@
+"""
+Application Configuration
+Loads and validates environment variables
+"""
+
+import os
+from typing import List, Optional
+from pydantic_settings import BaseSettings
+from pydantic import Field, ConfigDict
+
+
+class Settings(BaseSettings):
+    """Application settings from environment variables"""
+    
+    model_config = ConfigDict(
+        extra='ignore',
+        env_file='.env',
+        env_file_encoding='utf-8',
+        case_sensitive=False
+    )
+    
+    # ==================== APPLICATION ====================
+    environment: str = Field(default="development", env="ENVIRONMENT")
+    mode: str = Field(default="development", env="MODE")
+    debug: bool = Field(default=True, env="DEBUG")
+    log_level: str = Field(default="INFO", env="LOG_LEVEL")
+    
+    # ==================== SERVER ====================
+    server_host: str = Field(default="0.0.0.0", env="SERVER_HOST")
+    server_port: int = Field(default=8000, env="SERVER_PORT")
+    cors_origins_csv: str = Field(default="http://localhost:5173,http://127.0.0.1:5173", env="CORS_ORIGINS")
+    trusted_hosts_csv: str = Field(default="localhost,127.0.0.1", env="TRUSTED_HOSTS")
+    
+    # ==================== DATABASE ====================
+    database_url: str = Field(default="", env="DATABASE_URL")
+    
+    # ==================== SUPABASE ====================
+    supabase_url: str = Field(default="", env="SUPABASE_URL")
+    supabase_service_role_key: str = Field(default="", env="SUPABASE_SERVICE_ROLE_KEY")
+    supabase_bucket_name: str = Field(default="knowledge-base-documents", env="SUPABASE_BUCKET_NAME")
+    db_pool_min_size: int = Field(default=5, env="DB_POOL_MIN_SIZE")
+    db_pool_max_size: int = Field(default=20, env="DB_POOL_MAX_SIZE")
+    
+    # ==================== LLM ====================
+    llm_model_name: str = Field(default="llama3-8b-8192", env="LLM_MODEL_NAME")
+    llm_temperature: float = Field(default=0.2, env="LLM_TEMPERATURE")
+    llm_max_tokens: int = Field(default=700, env="LLM_MAX_TOKENS")
+    
+    openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
+    groq_api_key: str = Field(default="", env="GROQ_API_KEY")
+    google_api_key: str = Field(default="", env="GOOGLE_API_KEY")
+    hf_api_key: str = Field(default="", env="HF_API_KEY")
+    
+    # ==================== TWILIO ====================
+    twilio_account_sid: str = Field(default="", env="TWILIO_ACCOUNT_SID")
+    twilio_auth_token: str = Field(default="", env="TWILIO_AUTH_TOKEN")
+    twilio_phone_number: str = Field(default="", env="TWILIO_PHONE_NUMBER")
+    twilio_whatsapp_from: str = Field(default="", env="TWILIO_WHATSAPP_FROM")
+    twilio_webhook_base_url: str = Field(default="http://localhost:8000", env="TWILIO_WEBHOOK_BASE_URL")
+    
+    # ==================== NGROK ====================
+    ngrok_auth_token: str = Field(default="", env="NGROK_AUTH_TOKEN")
+    
+    # ==================== SARVAM ====================
+    sarvam_api_key: str = Field(default="", env="SARVAM_API_KEY")
+    sarvam_language: str = Field(default="hi", env="SARVAM_LANGUAGE")
+    
+    # ==================== REDIS ====================
+    redis_url: str = Field(default="redis://localhost:6379", env="REDIS_URL")
+    redis_max_connections: int = Field(default=50, env="REDIS_MAX_CONNECTIONS")
+    
+    # ==================== SCORING ====================
+    score_hot_threshold: float = Field(default=0.75, env="SCORE_HOT_THRESHOLD")
+    score_warm_threshold: float = Field(default=0.50, env="SCORE_WARM_THRESHOLD")
+    
+    # ==================== RM SETTINGS ====================
+    default_rm_name: str = Field(default="Auto", env="DEFAULT_RM_NAME")
+    auto_assign_hot_leads: bool = Field(default=True, env="AUTO_ASSIGN_HOT_LEADS")
+    
+    # ==================== WHATSAPP ====================
+    whatsapp_template_language: str = Field(default="hi", env="WHATSAPP_TEMPLATE_LANGUAGE")
+    whatsapp_send_on_warm: bool = Field(default=True, env="WHATSAPP_SEND_ON_WARM")
+    support_phone_number: str = Field(default="+919999999999", env="SUPPORT_PHONE_NUMBER")
+    
+    # ==================== SESSION ====================
+    session_timeout_minutes: int = Field(default=30, env="SESSION_TIMEOUT_MINUTES")
+    max_turns_per_session: int = Field(default=50, env="MAX_TURNS_PER_SESSION")
+    
+    # ==================== PROPERTIES ====================
+    
+    @property
+    def supabase_key(self) -> str:
+        """Get Supabase service role key (alias for storage)"""
+        return self.supabase_service_role_key
+    
+    @property
+    def has_twilio(self) -> bool:
+        """Check if Twilio is configured"""
+        return bool(
+            self.twilio_account_sid 
+            and self.twilio_auth_token
+            and self.twilio_phone_number
+        )
+    
+    @property
+    def has_openai(self) -> bool:
+        """Check if OpenAI is configured"""
+        return bool(
+            self.openai_api_key 
+        )
+
+    @property
+    def cors_origins(self) -> List[str]:
+        """Explicit allow-list. Set CORS_ORIGINS for deployed frontend domains."""
+        return [origin.strip() for origin in self.cors_origins_csv.split(",") if origin.strip()]
+
+    @property
+    def cors_allow_credentials(self) -> bool:
+        return bool(self.cors_origins)
+
+    @property
+    def trusted_hosts(self) -> List[str]:
+        """Explicit allow-list. Add the deployment hostname via TRUSTED_HOSTS."""
+        return [host.strip() for host in self.trusted_hosts_csv.split(",") if host.strip()]
+
+
+# ==================== GLOBAL INSTANCE ====================
+
+_config: Optional[Settings] = None
+
+
+def get_config() -> Settings:
+    """
+    Get or create global configuration instance.
+    
+    Returns:
+        Settings object with all environment variables
+    """
+    global _config
+    if _config is None:
+        _config = Settings()
+        _validate_config(_config)
+    return _config
+
+
+def _validate_config(config: Settings) -> None:
+    """
+    Validate critical configuration values.
+    
+    Raises:
+        ValueError: If critical config is missing
+    """
+    optional_integrations = [
+        ("database_url", "DATABASE_URL"),
+        ("groq_api_key", "GROQ_API_KEY"),
+        ("hf_api_key", "HF_API_KEY"),
+    ]
+    missing = [env_name for field, env_name in optional_integrations if not getattr(config, field)]
+    if missing:
+        print(f"[CONFIG] Offline demo mode; optional integrations not configured: {', '.join(missing)}")
+    else:
+        print(f"[CONFIG] Configuration validated (environment: {config.environment})")
+
+
+# ==================== MODULE LEVEL INSTANCE ====================
+# Create global settings instance that can be imported
+settings = get_config()
