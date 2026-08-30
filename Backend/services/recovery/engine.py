@@ -131,6 +131,24 @@ def choose_action(case: Dict[str, Any], today: Optional[date] = None) -> Dict[st
     return {"action": "voice_call", "channel": "voice", "reason": "high-risk recovery outreach"}
 
 
+def build_action_preview(case: Dict[str, Any], policy: Dict[str, str]) -> Dict[str, str]:
+    """Create a deterministic, reviewable intervention before it is executed."""
+    amount = f"₹{money(case['amount']):,}"
+    name = case["customer_name"]
+    link = case["payment_link"]
+    hindi = case.get("preferred_language") == "hi"
+    templates = {
+        "checkout_recovery": ("WhatsApp checkout recovery", f"Namaste {name}, aapka {amount} checkout complete nahi hua. Aap yahan securely complete kar sakte hain: {link}", "Time-bound checkout link; no repeated outreach after payment."),
+        "subscription_retry": ("Subscription retry", f"Hi {name}, your {amount} subscription payment did not go through. Retry securely here before access is interrupted: {link}", "One controlled retry, then payment-link fallback."),
+        "mandate_retry": ("Mandate retry", f"Namaste {name}, {amount} mandate payment unsuccessful raha. Aap secure retry/payment yahan complete kar sakte hain: {link}", "Bounded retry with payment-link fallback."),
+        "whatsapp_payment_link": ("WhatsApp payment link", f"{'Namaste' if hindi else 'Hello'} {name}, aapka {amount} invoice pending hai. Secure payment link: {link}", "Personalized reminder; attempt limits and stop rules apply."),
+        "whatsapp_reminder": ("WhatsApp reminder", f"{'Namaste' if hindi else 'Hello'} {name}, aapka {amount} payment due hai. Secure link: {link}", "Low-risk first reminder only."),
+        "voice_call": ("Voice recovery script", f"Namaste {name}. Aapka {amount} invoice overdue hai. Kya main secure payment link share kar doon?", "One voice call per day; transcript and outcome are audited."),
+    }
+    title, body, safeguard = templates.get(policy["action"], ("No automated outreach", policy["reason"], "A policy stop or human review is required."))
+    return {"title": title, "channel": policy["channel"], "body": body, "safeguard": safeguard}
+
+
 def extract_promise_to_pay(text: str, amount: int, reference_date: Optional[date] = None) -> Dict[str, Any]:
     """Extract a bounded promise-to-pay signal from a customer statement."""
     normalized = text.lower()
@@ -205,6 +223,7 @@ def seeded_cases() -> List[Dict[str, Any]]:
         created["recommended_action"] = policy["action"]
         created["recommended_channel"] = policy["channel"]
         created["policy_reason"] = policy["reason"]
+        created["action_preview"] = build_action_preview(created, policy)
         if case_id == "rec-001":
             created["timeline"].extend([
                 _event("WhatsApp reminder sent", "First reminder delivered with secure payment link", "whatsapp_payment_link", "whatsapp", "sent"),
@@ -333,6 +352,7 @@ class RecoveryStore:
         case["recommended_action"] = policy["action"]
         case["recommended_channel"] = policy["channel"]
         case["policy_reason"] = policy["reason"]
+        case["action_preview"] = build_action_preview(case, policy)
 
     def execute_action(self, case_id: str) -> Dict[str, Any]:
         case = self._case(case_id)
@@ -358,7 +378,7 @@ class RecoveryStore:
             "mandate_retry": "Mandate retry initiated",
         }
         title = action_titles.get(policy["action"], "Voice recovery call initiated" if policy["channel"] == "voice" else "WhatsApp + payment link sent")
-        notes = "Live channel optional; this demo records the approved recovery action."
+        notes = f"Approved content: {case['action_preview']['body']} Safeguard: {case['action_preview']['safeguard']}"
         case["timeline"].append(_event(title, notes, policy["action"], policy["channel"], "sent"))
         self._refresh_policy(case)
         return deepcopy(case)

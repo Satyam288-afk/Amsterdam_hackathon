@@ -105,6 +105,14 @@ def test_event_severity_is_explicit_in_the_risk_breakdown():
     assert score_breakdown(subscription)[0] == {"label": "Event severity — payment failure", "points": 20}
 
 
+def test_action_preview_is_policy_bound_and_saved_in_audit_event():
+    store = RecoveryStore()
+    case = store.activate_scenario("subscription")
+    assert case["action_preview"]["title"] == "Subscription retry"
+    updated = store.execute_action(case["id"])
+    assert "Approved content:" in updated["timeline"][-1]["notes"]
+
+
 def test_benchmark_is_calculated_from_seeded_records():
     benchmark = calculate_benchmark(RecoveryStore().list_cases())
     assert benchmark["invoices_evaluated"] == 9

@@ -14,6 +14,13 @@ export interface RiskBreakdownItem {
   points: number;
 }
 
+export interface ActionPreview {
+  title: string;
+  channel: string;
+  body: string;
+  safeguard: string;
+}
+
 export interface RecoveryCase {
   id: string;
   customer_name: string;
@@ -34,6 +41,7 @@ export interface RecoveryCase {
   recommended_action: string;
   recommended_channel: string;
   policy_reason: string;
+  action_preview?: ActionPreview;
   attempts: number;
   max_attempts: number;
   promise_to_pay_date?: string | null;
