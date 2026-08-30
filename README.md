@@ -90,7 +90,7 @@ For example, a ₹14,900 failed subscription with no overdue days is `20` event-
 
 An administrator can submit a free-form customer reply on a recovery case. The diagnosis service returns only a schema-validated `cause`, `confidence`, `reasoning`, and `source`; it cannot recommend, execute, or bypass an action. The resulting classification is written to the timeline and the deterministic risk/policy engine recomputes the approved intervention.
 
-By default, the service uses a transparent deterministic reply classifier for a reliable offline demo. To enable Groq structured-output inference, configure `GROQ_API_KEY` and explicitly set `ENABLE_EXTERNAL_LLM_DIAGNOSIS=true`. If Groq is unavailable, malformed, or times out, it safely falls back to the deterministic classifier and labels its source accordingly.
+By default, the service uses a transparent deterministic reply classifier for a reliable offline demo. To enable Gemini structured-output inference, configure `GOOGLE_API_KEY` and explicitly set `ENABLE_EXTERNAL_LLM_DIAGNOSIS=true`. If Gemini is unavailable, malformed, or times out, it safely falls back to the deterministic classifier and labels its source accordingly.
 
 ## Policy boundaries
 

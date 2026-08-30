@@ -34,26 +34,22 @@ def diagnose_customer_reply(text: str, fallback_cause: str = "unknown") -> Dict[
     """Return a schema-validated diagnosis, with a deterministic offline fallback.
 
     External inference is opt-in because customer text can contain sensitive
-    financial information. Set ENABLE_EXTERNAL_LLM_DIAGNOSIS=true and GROQ_API_KEY
+    financial information. Set ENABLE_EXTERNAL_LLM_DIAGNOSIS=true and GOOGLE_API_KEY
     only after completing the appropriate data-processing review.
     """
     clean_text = text.strip()[:2000]
-    if settings.external_llm_diagnosis_enabled and settings.groq_api_key:
+    if settings.external_llm_diagnosis_enabled and settings.google_api_key:
         try:
-            from groq import Groq
-            completion = Groq(api_key=settings.groq_api_key).chat.completions.create(
-                model=settings.llm_model_name,
-                temperature=0,
-                response_format={"type": "json_object"},
-                messages=[
-                    {"role": "system", "content": "Classify a B2B payment-recovery customer reply. Return JSON only with cause (one of: approval delay, customer unreachable, invoice dispute, payment delay, payment failure, promise missed, unknown), confidence (0-1), and reasoning (max 25 words). Never recommend an action or invent facts."},
-                    {"role": "user", "content": clean_text},
-                ],
+            import google.generativeai as genai
+            genai.configure(api_key=settings.google_api_key)
+            model = genai.GenerativeModel(
+                settings.gemini_model_name,
+                system_instruction="Classify a B2B payment-recovery customer reply. Return JSON only with cause (one of: approval delay, customer unreachable, invoice dispute, payment delay, payment failure, promise missed, unknown), confidence (0-1), and reasoning (max 25 words). Never recommend an action or invent facts.",
             )
-            content = completion.choices[0].message.content or "{}"
-            return _validated(json.loads(content), "groq_structured_output", fallback_cause)
+            response = model.generate_content(clean_text, generation_config={"temperature": 0, "response_mime_type": "application/json"})
+            return _validated(json.loads(getattr(response, "text", "{}")), "gemini_structured_output", fallback_cause)
         except Exception:
             # Model/API failures must never block a safe recovery workflow.
             pass
     result = classify_cause(clean_text, fallback_cause)
-    return _validated({**result, "reasoning": "Keyword-based fallback used because external LLM diagnosis is not enabled or unavailable."}, result["source"], fallback_cause)
+    return _validated({**result, "reasoning": "Keyword-based fallback used because external Gemini diagnosis is not enabled or unavailable."}, result["source"], fallback_cause)
