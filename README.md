@@ -12,17 +12,29 @@ Sambhaash Recovery is a demo-ready revenue-recovery agent built for Track 03. It
 - Conversations page populated by simulated-call outcomes.
 - Live analytics that reflect the current demo run, separate from the synthetic batch benchmark.
 - Scenario Lab for checkout abandonment, failed subscriptions, and mandate-retry recovery. Each launches a real case in the same engine.
+- Role-aware demo access: administrators can operate the demo; recovery analysts have a read-only audit view.
 - Resettable fictional demo data, backend policy tests, and a production frontend build.
 
 ## 60-second judge demo
 
-1. Open **Dashboard → Run golden demo** and choose Aarav Mehta (₹84,500 at risk).
+1. Sign in as **Admin** and open **Dashboard → Run golden demo** for Aarav Mehta (₹84,500 at risk).
 2. Show the risk-score breakdown, diagnosis, and approved action.
 3. Open the recovery dialer and select **“Payment complete ho gaya”**.
 4. Show the case is `RECOVERED`, recovered revenue is ₹84,500, and further outreach is stopped.
 5. Open **Conversations** to show the saved call outcome and next action.
 6. Open **Analytics** to show the same live recovered amount.
 7. Optionally open **Scenario Lab** to launch checkout, subscription, or mandate-retry cases through the same engine.
+
+## Demo access and roles
+
+The local demo starts at `/login`. These accounts exist only in the browser-local demo adapter:
+
+| Role | Sign-in | What it can do |
+|---|---|---|
+| Administrator | `admin@sambhaash.demo` / `Admin@123` | Launch scenarios, reset the demo, and execute/simulate recovery actions. |
+| Recovery analyst | `user@sambhaash.demo` / `User@123` | View cases, score explanations, timelines, Conversations, and analytics. Operational controls are disabled. |
+
+This makes the approval boundary visible during a demo. It is **not production authentication**: the session is stored in local browser storage and is deliberately labelled as demo access. Production must enforce authentication and roles in the backend and database, not only the frontend.
 
 ## Explainable risk score
 
@@ -87,7 +99,7 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal, then visit `/dashboard/recovery`.
+Open the Vite URL shown in the terminal, then visit `/login` and sign in as an administrator to run the full demo.
 
 ## Verify
 
@@ -113,4 +125,4 @@ npm run build
 
 ## Production path
 
-The current adapter is intentionally in-memory for a reliable no-credential demo. A production implementation would persist cases and audit events, authenticate users, receive verified payment webhooks, use consented communication channels, and retain only the minimum required customer data.
+The current recovery adapter is intentionally in-memory for a reliable no-credential demo. Its role selector is a browser-local presentation gate, not a security boundary. A production implementation would use Supabase/Auth0 (or equivalent), server-side role checks and database row-level policies; persist cases and audit events; receive verified payment webhooks; use consented communication channels; and retain only the minimum required customer data.
