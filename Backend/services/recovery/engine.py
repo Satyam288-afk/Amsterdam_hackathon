@@ -93,6 +93,15 @@ def choose_action(case: Dict[str, Any], today: Optional[date] = None) -> Dict[st
     if case.get("cause") == "invoice dispute":
         return {"action": "human_escalation", "channel": "manual", "reason": "invoice dispute requires human review"}
 
+    journey_actions = {
+        "checkout": ("checkout_recovery", "whatsapp", "checkout abandoned; send a time-bound payment link"),
+        "subscription": ("subscription_retry", "payment_link", "subscription payment failed; retry before access is interrupted"),
+        "mandate": ("mandate_retry", "payment_link", "mandate payment failed; offer a controlled retry"),
+    }
+    if case.get("journey") in journey_actions:
+        action, channel, reason = journey_actions[case["journey"]]
+        return {"action": action, "channel": channel, "reason": reason}
+
     promise_date = case.get("promise_to_pay_date")
     if promise_date and status == "PROMISE_TO_PAY":
         due = date.fromisoformat(promise_date)
@@ -257,6 +266,39 @@ class RecoveryStore:
         self._call_summaries = []
         return self.summary()
 
+    def scenario_catalog(self) -> List[Dict[str, Any]]:
+        return [
+            {"id": "checkout", "title": "Checkout drop-off recovery", "signal": "Customer abandoned checkout after payment-link generation", "intervention": "Send a time-bound payment link", "outcome": "Payment confirmed or checkout remains abandoned", "amount": 5_999, "customer": "Meera Sharma", "language": "hi"},
+            {"id": "subscription", "title": "Failed-subscription recovery", "signal": "Recurring subscription charge failed", "intervention": "Offer a retry and secure payment link before access interruption", "outcome": "Subscription recovered or routed to retry follow-up", "amount": 14_900, "customer": "NovaFit Studios", "language": "en"},
+            {"id": "mandate", "title": "Mandate retry sequencer", "signal": "Mandate debit returned by bank", "intervention": "Run a bounded retry with payment-link fallback", "outcome": "Payment recovered or manual escalation", "amount": 78_000, "customer": "Indigo Learning Pvt Ltd", "language": "hi"},
+        ]
+
+    def activate_scenario(self, scenario_id: str) -> Dict[str, Any]:
+        template = next((item for item in self.scenario_catalog() if item["id"] == scenario_id), None)
+        if not template:
+            raise KeyError(scenario_id)
+        case_id = f"scn-{scenario_id}-001"
+        existing = next((item for item in self._cases if item["id"] == case_id), None)
+        if existing:
+            return deepcopy(existing)
+        case = {
+            "id": case_id, "customer_name": template["customer"], "invoice_number": f"DEMO-{scenario_id.upper()}-001",
+            "amount": template["amount"], "due_date": date(2026, 8, 29).isoformat(), "status": "OPEN", "days_overdue": 0,
+            "preferred_language": template["language"], "phone": "+91980000999", "whatsapp": "+91980000999",
+            "payment_link": f"https://rzp.io/i/demo-{scenario_id}-001", "attempts": 0, "max_attempts": MAX_AUTOMATED_ATTEMPTS,
+            "previous_promise_missed": False, "historical_payment_delay_days": 0, "responsiveness": "high",
+            "cause": "payment failure" if scenario_id in {"subscription", "mandate"} else "checkout abandonment",
+            "cause_confidence": 0.91, "journey": scenario_id, "promise_to_pay_date": None, "promise_to_pay_amount": None,
+            "failed_promise": False, "next_action_at": None, "recovered_amount": 0, "demo_data": True,
+            "timeline": [
+                _event("Revenue signal detected", template["signal"], "signal_detection", "system", "detected"),
+                _event("Recovery path selected", template["intervention"], "diagnosis", "system", "approved"),
+            ],
+        }
+        self._refresh_policy(case)
+        self._cases.append(case)
+        return deepcopy(case)
+
     def list_call_summaries(self) -> List[Dict[str, Any]]:
         return deepcopy(list(reversed(self._call_summaries)))
 
@@ -299,7 +341,12 @@ class RecoveryStore:
                 return deepcopy(case)
         case["attempts"] += 1
         case["status"] = "IN_PROGRESS"
-        title = "Voice recovery call initiated" if policy["channel"] == "voice" else "WhatsApp + payment link sent"
+        action_titles = {
+            "checkout_recovery": "Checkout recovery payment link sent",
+            "subscription_retry": "Subscription retry initiated",
+            "mandate_retry": "Mandate retry initiated",
+        }
+        title = action_titles.get(policy["action"], "Voice recovery call initiated" if policy["channel"] == "voice" else "WhatsApp + payment link sent")
         notes = "Live channel optional; this demo records the approved recovery action."
         case["timeline"].append(_event(title, notes, policy["action"], policy["channel"], "sent"))
         self._refresh_policy(case)

@@ -74,6 +74,8 @@ const fallbackCase = (id: string) => {
 };
 
 export const recoveryDemo = {
+  async listScenarios(): Promise<any[]> { return (await apiService.api.get<{ scenarios: any[] }>("/api/recovery/scenarios")).data.scenarios; },
+  async activateScenario(id: string): Promise<RecoveryCase> { return (await apiService.api.post<RecoveryCase>(`/api/recovery/scenarios/${id}/activate`)).data; },
   async resetDemo(): Promise<RecoverySummary> {
     try {
       return (await apiService.api.post<{ summary: RecoverySummary }>("/api/recovery/demo/reset")).data.summary;

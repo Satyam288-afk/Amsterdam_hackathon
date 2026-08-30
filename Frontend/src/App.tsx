@@ -15,6 +15,7 @@ import CallSummaries from "./pages/CallSummaries";
 import RecoveryDashboardPage from "./pages/RecoveryDashboardPage";
 import RecoveryCasePage from "./pages/RecoveryCasePage";
 import BenchmarkPage from "./pages/BenchmarkPage";
+import ScenarioLabPage from "./pages/ScenarioLabPage";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
                 <Route path="leads/:id" element={<LeadDetailPage />} />
                 <Route path="analytics" element={<RecoveryAnalyticsPage />} />
                 <Route path="benchmark" element={<BenchmarkPage />} />
+                <Route path="scenarios" element={<ScenarioLabPage />} />
                 <Route path="appendix" element={<AppendixPage />} />
                 <Route path="rm" element={<RMPage />} />
                 <Route path="queue" element={<QueueDashboard />} />

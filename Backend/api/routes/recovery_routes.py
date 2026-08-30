@@ -40,6 +40,19 @@ async def list_demo_call_summaries():
     return {"demo_data": True, "data": store.list_call_summaries(), "total": len(store.list_call_summaries())}
 
 
+@router.get("/scenarios")
+async def list_recovery_scenarios():
+    return {"demo_data": True, "scenarios": store.scenario_catalog()}
+
+
+@router.post("/scenarios/{scenario_id}/activate")
+async def activate_recovery_scenario(scenario_id: str):
+    try:
+        return store.activate_scenario(scenario_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Recovery scenario not found")
+
+
 @router.get("/cases/{case_id}")
 async def get_recovery_case(case_id: str):
     case = store.get_case(case_id)

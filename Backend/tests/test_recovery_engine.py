@@ -90,6 +90,15 @@ def test_simulated_call_creates_a_visible_summary():
     assert "outreach paused" in summary["summary"]["one_line_summary"]
 
 
+def test_scenario_activation_reuses_the_recovery_policy_engine():
+    store = RecoveryStore()
+    checkout = store.activate_scenario("checkout")
+    subscription = store.activate_scenario("subscription")
+    assert checkout["recommended_action"] == "checkout_recovery"
+    assert subscription["recommended_action"] == "subscription_retry"
+    assert store.activate_scenario("checkout")["id"] == checkout["id"]
+
+
 def test_benchmark_is_calculated_from_seeded_records():
     benchmark = calculate_benchmark(RecoveryStore().list_cases())
     assert benchmark["invoices_evaluated"] == 9
