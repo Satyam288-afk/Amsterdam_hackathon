@@ -9,6 +9,11 @@ export interface RecoveryEvent {
   timestamp: string;
 }
 
+export interface RiskBreakdownItem {
+  label: string;
+  points: number;
+}
+
 export interface RecoveryCase {
   id: string;
   customer_name: string;
@@ -23,6 +28,7 @@ export interface RecoveryCase {
   payment_link: string;
   risk_score: number;
   risk_reasons: string[];
+  risk_breakdown?: RiskBreakdownItem[];
   cause: string;
   cause_confidence: number;
   recommended_action: string;

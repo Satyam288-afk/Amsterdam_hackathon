@@ -1,6 +1,6 @@
 from datetime import date
 
-from services.recovery.engine import RecoveryStore, calculate_benchmark, score_invoice
+from services.recovery.engine import RecoveryStore, calculate_benchmark, score_breakdown, score_invoice
 
 
 def test_risk_score_has_field_derived_reasons():
@@ -97,6 +97,12 @@ def test_scenario_activation_reuses_the_recovery_policy_engine():
     assert checkout["recommended_action"] == "checkout_recovery"
     assert subscription["recommended_action"] == "subscription_retry"
     assert store.activate_scenario("checkout")["id"] == checkout["id"]
+
+
+def test_event_severity_is_explicit_in_the_risk_breakdown():
+    subscription = RecoveryStore().activate_scenario("subscription")
+    assert subscription["risk_score"] == 30
+    assert score_breakdown(subscription)[0] == {"label": "Event severity — payment failure", "points": 20}
 
 
 def test_benchmark_is_calculated_from_seeded_records():

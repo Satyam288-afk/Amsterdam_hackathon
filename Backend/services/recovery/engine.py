@@ -25,44 +25,53 @@ def money(value: int | float) -> int:
     return int(round(value))
 
 
-def score_invoice(case: Dict[str, Any]) -> tuple[int, List[str]]:
-    """Return a 0-100 risk score and explainable, field-derived reasons."""
-    score = 0
-    reasons: List[str] = []
-    days_overdue = max(0, int(case.get("days_overdue", 0)))
+def score_breakdown(case: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Return every contribution, including zero values, for a judge-auditable score."""
+    days = max(0, int(case.get("days_overdue", 0)))
     amount = money(case.get("amount", 0))
     attempts = max(0, int(case.get("attempts", 0)))
-
-    overdue_points = min(30, round(days_overdue * 1.5))
-    score += overdue_points
-    if days_overdue:
-        reasons.append(f"{days_overdue} days overdue")
-
+    event_points = {"payment failure": 20, "checkout abandonment": 10, "invoice dispute": 25}.get(case.get("cause"), 0)
     if amount >= 75_000:
-        score += 29
+        amount_points, amount_label = 29, "Amount tier — high outstanding amount"
+    elif amount >= 40_000:
+        amount_points, amount_label = 20, "Amount tier — material outstanding amount"
+    elif amount >= 10_000:
+        amount_points, amount_label = 10, "Amount tier — material outstanding amount"
+    else:
+        amount_points, amount_label = 0, "Amount tier — low value"
+    return [
+        {"label": f"Event severity — {case.get('cause', 'no event signal')}", "points": event_points},
+        {"label": f"Days overdue — {days}", "points": min(30, round(days * 1.5))},
+        {"label": amount_label, "points": amount_points},
+        {"label": f"Prior failed attempts — {attempts}", "points": min(16, attempts * 8)},
+        {"label": "Previous promise missed", "points": 15 if case.get("previous_promise_missed") else 0},
+        {"label": "Historical payment delay", "points": 8 if case.get("historical_payment_delay_days", 0) >= 15 else 0},
+        {"label": "Low customer responsiveness", "points": 8 if case.get("responsiveness") == "low" else 0},
+    ]
+
+
+def score_invoice(case: Dict[str, Any]) -> tuple[int, List[str]]:
+    """Return a capped score and concise evidence derived from its breakdown."""
+    score = min(100, sum(item["points"] for item in score_breakdown(case)))
+    reasons: List[str] = []
+    if case.get("cause") in {"payment failure", "checkout abandonment", "invoice dispute"}:
+        reasons.append(f"{case['cause']} signal")
+    if case.get("days_overdue"):
+        reasons.append(f"{case['days_overdue']} days overdue")
+    amount = money(case.get("amount", 0))
+    if amount >= 75_000:
         reasons.append("high outstanding amount")
     elif amount >= 40_000:
-        score += 20
         reasons.append("material outstanding amount")
-    elif amount >= 10_000:
-        score += 10
-
-    attempt_points = min(16, attempts * 8)
-    score += attempt_points
-    if attempts:
-        reasons.append(f"{attempts} unsuccessful follow-up{'s' if attempts != 1 else ''}")
-
+    if case.get("attempts"):
+        reasons.append(f"{case['attempts']} unsuccessful follow-up{'s' if case['attempts'] != 1 else ''}")
     if case.get("previous_promise_missed"):
-        score += 15
         reasons.append("previous promise missed")
     if case.get("historical_payment_delay_days", 0) >= 15:
-        score += 8
         reasons.append("historical payment delay")
     if case.get("responsiveness") == "low":
-        score += 8
         reasons.append("low customer responsiveness")
-
-    return min(100, score), reasons or ["recently overdue invoice"]
+    return score, reasons or ["recently overdue invoice"]
 
 
 def classify_cause(text: str, fallback: str = "unknown") -> Dict[str, Any]:
@@ -190,6 +199,7 @@ def seeded_cases() -> List[Dict[str, Any]]:
         }
         score, reasons = score_invoice(created)
         created["risk_score"] = score
+        created["risk_breakdown"] = score_breakdown(created)
         created["risk_reasons"] = reasons
         policy = choose_action(created, today=date(2026, 8, 29))
         created["recommended_action"] = policy["action"]
@@ -318,6 +328,7 @@ class RecoveryStore:
     def _refresh_policy(self, case: Dict[str, Any]) -> None:
         score, reasons = score_invoice(case)
         case["risk_score"], case["risk_reasons"] = score, reasons
+        case["risk_breakdown"] = score_breakdown(case)
         policy = choose_action(case)
         case["recommended_action"] = policy["action"]
         case["recommended_channel"] = policy["channel"]
