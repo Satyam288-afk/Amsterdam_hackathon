@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from services.recovery.engine import RecoveryStore, calculate_benchmark
+from services.recovery.diagnosis import diagnose_customer_reply
 from api.auth import require_recovery_admin, require_recovery_user
 
 router = APIRouter(prefix="/api/recovery", tags=["AI Revenue Recovery Demo"], dependencies=[Depends(require_recovery_user)])
@@ -24,6 +25,10 @@ class PromiseRequest(BaseModel):
 
 class SimulatedResponseRequest(BaseModel):
     response_type: Literal["PAYMENT_CONFIRMED", "PROMISE_TO_PAY", "DISPUTE", "PAYMENT_FAILED", "NO_RESPONSE"]
+
+
+class DiagnosisRequest(BaseModel):
+    customer_text: str = Field(..., min_length=3, max_length=2000)
 
 
 @router.get("/summary")
@@ -78,6 +83,15 @@ async def execute_recovery_action(case_id: str):
         return store.execute_action(case_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="Recovery case not found")
+
+
+@router.post("/cases/{case_id}/diagnose", dependencies=[Depends(require_recovery_admin)])
+async def diagnose_recovery_reply(case_id: str, payload: DiagnosisRequest):
+    case = store.get_case(case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Recovery case not found")
+    diagnosis = diagnose_customer_reply(payload.customer_text, case.get("cause", "unknown"))
+    return store.apply_diagnosis(case_id, diagnosis, payload.customer_text)
 
 
 @router.post("/cases/{case_id}/promise", dependencies=[Depends(require_recovery_admin)])

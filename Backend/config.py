@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     
     openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
     groq_api_key: str = Field(default="", env="GROQ_API_KEY")
+    external_llm_diagnosis_enabled: bool = Field(default=False, env="ENABLE_EXTERNAL_LLM_DIAGNOSIS")
     google_api_key: str = Field(default="", env="GOOGLE_API_KEY")
     hf_api_key: str = Field(default="", env="HF_API_KEY")
     

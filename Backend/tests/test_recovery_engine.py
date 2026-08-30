@@ -1,6 +1,7 @@
 from datetime import date
 
 from services.recovery.engine import RecoveryStore, calculate_benchmark, score_breakdown, score_invoice
+from services.recovery.diagnosis import diagnose_customer_reply
 
 
 def test_risk_score_has_field_derived_reasons():
@@ -129,3 +130,13 @@ def test_benchmark_is_calculated_from_seeded_records():
     assert benchmark["sambhaash_recovered"] == 799_500
     assert benchmark["improvement"] == 525_500
     assert benchmark["net_recovered_value"] < benchmark["sambhaash_recovered"]
+
+
+def test_ai_diagnosis_is_bounded_and_recomputes_deterministic_policy():
+    store = RecoveryStore()
+    diagnosis = diagnose_customer_reply("The invoice amount is wrong; we dispute this charge.", "approval delay")
+    assert diagnosis["cause"] == "invoice dispute"
+    updated = store.apply_diagnosis("rec-001", diagnosis, "The invoice amount is wrong; we dispute this charge.")
+    assert updated["cause"] == "invoice dispute"
+    assert updated["recommended_action"] == "human_escalation"
+    assert updated["timeline"][-1]["title"] == "AI diagnosis recorded"

@@ -13,6 +13,7 @@ Sambhaash Recovery is a demo-ready revenue-recovery agent built for Track 03. It
 - Live analytics that reflect the current demo run, separate from the synthetic batch benchmark.
 - Scenario Lab for checkout abandonment, failed subscriptions, and mandate-retry recovery. Each launches a real case in the same engine.
 - Role-aware demo access: administrators can operate the demo; recovery analysts have a read-only audit view.
+- Bounded AI diagnosis: free-form customer replies are classified into a validated cause and confidence, while deterministic policy still owns every action.
 - Resettable fictional demo data, backend policy tests, and a production frontend build.
 
 ## 60-second judge demo
@@ -84,6 +85,12 @@ The score is deterministic, capped at 100, and stored with its full breakdown. N
 | Low responsiveness | +8 |
 
 For example, a ₹14,900 failed subscription with no overdue days is `20` event-severity points plus `10` amount-tier points: **30/100**. The UI shows every contribution—including zero-value ones—to make the decision auditable.
+
+## Bounded AI diagnosis
+
+An administrator can submit a free-form customer reply on a recovery case. The diagnosis service returns only a schema-validated `cause`, `confidence`, `reasoning`, and `source`; it cannot recommend, execute, or bypass an action. The resulting classification is written to the timeline and the deterministic risk/policy engine recomputes the approved intervention.
+
+By default, the service uses a transparent deterministic reply classifier for a reliable offline demo. To enable Groq structured-output inference, configure `GROQ_API_KEY` and explicitly set `ENABLE_EXTERNAL_LLM_DIAGNOSIS=true`. If Groq is unavailable, malformed, or times out, it safely falls back to the deterministic classifier and labels its source accordingly.
 
 ## Policy boundaries
 

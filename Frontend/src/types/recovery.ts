@@ -21,6 +21,12 @@ export interface ActionPreview {
   safeguard: string;
 }
 
+export interface DiagnosisRecord {
+  source: string;
+  reasoning: string;
+  customer_text: string;
+}
+
 export interface RecoveryCase {
   id: string;
   customer_name: string;
@@ -42,6 +48,7 @@ export interface RecoveryCase {
   recommended_channel: string;
   policy_reason: string;
   action_preview?: ActionPreview;
+  last_diagnosis?: DiagnosisRecord;
   attempts: number;
   max_attempts: number;
   promise_to_pay_date?: string | null;

@@ -383,6 +383,25 @@ class RecoveryStore:
         self._refresh_policy(case)
         return deepcopy(case)
 
+    def apply_diagnosis(self, case_id: str, diagnosis: Dict[str, Any], customer_text: str) -> Dict[str, Any]:
+        """Persist a validated classification, then recompute only deterministic policy."""
+        case = self._case(case_id)
+        if case.get("status") in {"RECOVERED", "STOPPED", "OPTED_OUT"}:
+            return deepcopy(case)
+        case["cause"] = diagnosis["cause"]
+        case["cause_confidence"] = diagnosis["confidence"]
+        case["last_diagnosis"] = {
+            "source": diagnosis["source"], "reasoning": diagnosis["reasoning"],
+            "customer_text": customer_text[:500],
+        }
+        case["timeline"].append(_event(
+            "AI diagnosis recorded",
+            f"Classified reply as {diagnosis['cause']} ({round(diagnosis['confidence'] * 100)}% confidence). Source: {diagnosis['source']}. {diagnosis['reasoning']}",
+            "diagnosis", "ai", "recorded",
+        ))
+        self._refresh_policy(case)
+        return deepcopy(case)
+
     def record_promise(self, case_id: str, customer_text: str, promise_date: Optional[str] = None) -> Dict[str, Any]:
         case = self._case(case_id)
         # Replayed webhooks or an accidental second click must not create a

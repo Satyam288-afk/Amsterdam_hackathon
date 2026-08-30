@@ -104,6 +104,18 @@ export const recoveryDemo = {
       const item = fallbackCase(id); item.attempts += 1; item.status = "IN_PROGRESS"; item.timeline.push(event("WhatsApp + payment link sent", "Demo action recorded; live WhatsApp remains optional.", "whatsapp_payment_link", "whatsapp", "sent")); return clone(item);
     }
   },
+  async diagnose(id: string, customerText: string): Promise<RecoveryCase> {
+    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/diagnose`, { customer_text: customerText })).data; } catch (error) {
+      if (isSupabaseConfigured) throw error;
+      const item = fallbackCase(id);
+      const normalized = customerText.toLowerCase();
+      const cause = normalized.includes("dispute") || normalized.includes("wrong invoice") ? "invoice dispute" : normalized.includes("approval") ? "approval delay" : normalized.includes("failed") || normalized.includes("bank") || normalized.includes("link") ? "payment failure" : normalized.includes("friday") || normalized.includes("delay") ? "payment delay" : item.cause;
+      item.cause = cause; item.cause_confidence = 0.91;
+      item.last_diagnosis = { source: "deterministic_reply_classifier", reasoning: "Keyword-based fallback used because the local API is unavailable.", customer_text: customerText.slice(0, 500) };
+      item.timeline.push(event("AI diagnosis recorded", `Classified reply as ${cause} (91% confidence). Source: deterministic_reply_classifier.`, "diagnosis", "ai", "recorded"));
+      return clone(item);
+    }
+  },
   async recordPromise(id: string, customerText: string): Promise<RecoveryCase> {
     try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/promise`, { customer_text: customerText })).data; } catch (error) {
       if (isSupabaseConfigured) throw error;
