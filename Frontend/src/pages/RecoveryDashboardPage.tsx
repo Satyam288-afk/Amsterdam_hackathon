@@ -13,14 +13,24 @@ export default function RecoveryDashboardPage() {
   const [cases, setCases] = useState<RecoveryCase[]>([]);
   const [metrics, setMetrics] = useState<RecoverySummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resetting, setResetting] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    Promise.all([recoveryDemo.listCases(), recoveryDemo.getSummary()]).then(([allCases, summary]) => {
+  const load = () => Promise.all([recoveryDemo.listCases(), recoveryDemo.getSummary()]).then(([allCases, summary]) => {
       setCases(allCases); setMetrics(summary); setLoading(false);
     });
-  }, []);
 
+  useEffect(() => { load(); }, []);
+
+  const resetDemo = async () => {
+    setResetting(true);
+    try {
+      await recoveryDemo.resetDemo();
+      await load();
+    } finally {
+      setResetting(false);
+    }
+  };
   if (loading || !metrics) return <div className="p-6 text-[#3d2b1f]/70 font-semibold">Loading recovery workspace…</div>;
   const columns = [
     { key: "customer_name" as keyof RecoveryCase, label: "Customer", sortable: true, render: (_: unknown, row: RecoveryCase) => <div><p className="font-bold">{row.customer_name}</p><p className="text-xs text-gray-500">{row.invoice_number}</p></div> },
@@ -34,7 +44,7 @@ export default function RecoveryDashboardPage() {
   return <div className="space-y-6">
     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
       <div><div className="inline-flex rounded-full bg-[#faedcd] px-3 py-1 text-xs font-black tracking-wider text-[#8b572f]">DEMO DATA · FICTIONAL INVOICES</div><h1 className="mt-3 text-3xl font-black text-[#2d1e18] font-display">AI Revenue Recovery</h1><p className="mt-1 text-[#3d2b1f]/70">Detect → Diagnose → Decide → Act → Recover</p></div>
-      <p className="max-w-sm text-sm text-[#3d2b1f]/70">Bounded B2B receivables workflows. Customer data is not required to run this demo.</p>
+      <div className="flex flex-wrap items-center gap-3"><button onClick={() => navigate("/dashboard/recovery/rec-001")} className="rounded-lg bg-[#d4a373] px-4 py-2.5 text-sm font-bold text-white cursor-pointer">Run golden demo</button><button disabled={resetting} onClick={resetDemo} className="rounded-lg border border-[#d4a373]/50 bg-white px-4 py-2.5 text-sm font-bold text-[#6e4627] disabled:opacity-50 cursor-pointer">{resetting ? "Resetting…" : "Reset demo"}</button></div>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <MetricCard label="Revenue at Risk" value={rupees(metrics.revenue_at_risk)} icon={<AlertTriangle />} trend="down" trendValue="Open receivables" />
@@ -45,6 +55,7 @@ export default function RecoveryDashboardPage() {
       <MetricCard label="Escalations" value={metrics.escalations} icon={<ShieldAlert />} />
       <MetricCard label="Automated Attempt Limit" value="3" icon={<CheckCircle2 />} trend="neutral" trendValue="Enforced server-side" />
     </div>
+    <section className="rounded-lg border border-[#d4a373]/35 bg-[#fefae0] p-5"><p className="text-xs font-black tracking-wider text-[#8b572f]">JUDGE-READY FLOW · ABOUT 45 SECONDS</p><div className="mt-2 grid gap-2 text-sm text-[#3d2b1f]/80 md:grid-cols-3"><p><strong>1. Detect:</strong> Open Aarav Mehta — the risk evidence and diagnosis are visible.</p><p><strong>2. Act:</strong> execute the approved action, then choose a Hinglish promise or payment confirmation.</p><p><strong>3. Prove:</strong> the amount recovered, stop rule, and immutable-looking audit timeline update immediately.</p></div></section>
     <div className="glass rounded-lg border border-[#faedcd]/60 p-4 md:p-6"><div className="mb-5"><h2 className="text-xl font-black text-[#2d1e18] font-display">Recovery Cases</h2><p className="text-sm text-[#3d2b1f]/65">Open a case to inspect evidence, policy, action history, and recovery outcome.</p></div><DataTable columns={columns} data={cases} rowKey="id" onRowClick={(item: RecoveryCase) => navigate(`/dashboard/recovery/${item.id}`)} /></div>
   </div>;
 }

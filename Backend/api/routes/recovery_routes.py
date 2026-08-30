@@ -43,6 +43,16 @@ async def get_recovery_case(case_id: str):
     return case
 
 
+@router.post("/demo/reset")
+async def reset_recovery_demo():
+    """Reset only the in-memory fictional records used by this demo."""
+    return {
+        "demo_data": True,
+        "message": "Demo reset. The golden-path case is ready to run again.",
+        "summary": store.reset(),
+    }
+
+
 @router.post("/cases/{case_id}/execute")
 async def execute_recovery_action(case_id: str):
     try:

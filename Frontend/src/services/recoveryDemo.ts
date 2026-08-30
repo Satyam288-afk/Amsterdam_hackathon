@@ -73,6 +73,14 @@ const fallbackCase = (id: string) => {
 };
 
 export const recoveryDemo = {
+  async resetDemo(): Promise<RecoverySummary> {
+    try {
+      return (await apiService.api.post<{ summary: RecoverySummary }>("/api/recovery/demo/reset")).data.summary;
+    } catch {
+      fallbackCases = makeCases();
+      return clone(summary());
+    }
+  },
   async getSummary(): Promise<RecoverySummary> { try { return (await apiService.api.get<RecoverySummary>("/api/recovery/summary")).data; } catch { return clone(summary()); } },
   async listCases(): Promise<RecoveryCase[]> { try { return (await apiService.api.get<{ cases: RecoveryCase[] }>("/api/recovery/cases")).data.cases; } catch { return clone(fallbackCases); } },
   async getCase(id: string): Promise<RecoveryCase> { try { return (await apiService.api.get<RecoveryCase>(`/api/recovery/cases/${id}`)).data; } catch { return clone(fallbackCase(id)); } },

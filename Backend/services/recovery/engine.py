@@ -250,6 +250,11 @@ class RecoveryStore:
     def __init__(self) -> None:
         self._cases = seeded_cases()
 
+    def reset(self) -> Dict[str, Any]:
+        """Restore the fictional dataset so the demo can always be replayed."""
+        self._cases = seeded_cases()
+        return self.summary()
+
     def list_cases(self) -> List[Dict[str, Any]]:
         return deepcopy(self._cases)
 
@@ -315,6 +320,11 @@ class RecoveryStore:
 
     def confirm_payment(self, case_id: str) -> Dict[str, Any]:
         case = self._case(case_id)
+        # Payment webhooks may be delivered more than once.  More importantly,
+        # a completed demo case must remain a closed case with a clean audit log.
+        if case["status"] == "RECOVERED":
+            self._refresh_policy(case)
+            return deepcopy(case)
         case["recovered_amount"] = money(case["amount"])
         case["status"] = "RECOVERED"
         case["next_action_at"] = None
@@ -327,13 +337,13 @@ class RecoveryStore:
         """Apply a labelled demo response through the same recovery state rules."""
         case = self._case(case_id)
         response_type = response_type.upper()
+        if case.get("status") in {"RECOVERED", "STOPPED", "OPTED_OUT"}:
+            self._refresh_policy(case)
+            return deepcopy(case)
         if response_type == "PAYMENT_CONFIRMED":
             return self.confirm_payment(case_id)
         if response_type == "PROMISE_TO_PAY":
             return self.record_promise(case_id, "Friday ko payment kar denge.")
-        if case.get("status") in {"RECOVERED", "STOPPED", "OPTED_OUT"}:
-            self._refresh_policy(case)
-            return deepcopy(case)
         if response_type == "DISPUTE":
             case["cause"] = "invoice dispute"
             case["cause_confidence"] = 0.91

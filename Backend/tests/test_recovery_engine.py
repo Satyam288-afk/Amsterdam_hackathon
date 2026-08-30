@@ -37,6 +37,24 @@ def test_payment_closes_case_and_stops_outreach():
     assert paid["recommended_action"] == "close"
 
 
+def test_repeated_payment_confirmation_is_idempotent():
+    store = RecoveryStore()
+    first = store.confirm_payment("rec-001")
+    second = store.confirm_payment("rec-001")
+    assert second["recovered_amount"] == 84_500
+    assert len(second["timeline"]) == len(first["timeline"])
+
+
+def test_reset_restores_the_replayable_demo_dataset():
+    store = RecoveryStore()
+    store.confirm_payment("rec-001")
+    reset = store.reset()
+    case = store.get_case("rec-001")
+    assert reset["recovered_revenue"] == 0
+    assert case["status"] == "OPEN"
+    assert case["recovered_amount"] == 0
+
+
 def test_hinglish_promise_is_stored_and_pauses_workflow():
     store = RecoveryStore()
     promised = store.record_promise("rec-001", "Friday ko payment kar denge.")
