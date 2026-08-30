@@ -86,6 +86,9 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_origins,
+        # The local Vite server may choose a free port during a demo. Keep this
+        # limited to loopback origins; deployed origins remain explicit above.
+        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1):\d+",
         allow_credentials=config.cors_allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],

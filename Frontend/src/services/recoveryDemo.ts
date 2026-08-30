@@ -16,6 +16,12 @@ const rawCases: Array<[string, string, string, number, number, string, number, b
   ["rec-009", "Delta Equipment", "INV-2026-1050", 265500, 6, "en", 0, false, "unknown", "OPEN"],
 ];
 
+const scenarioTemplates = [
+  { id: "checkout", title: "Checkout drop-off recovery", signal: "Customer abandoned checkout after payment-link generation", intervention: "Send a time-bound payment link", outcome: "Payment confirmed or checkout remains abandoned", amount: 5999, customer: "Meera Sharma", language: "hi" },
+  { id: "subscription", title: "Failed-subscription recovery", signal: "Recurring subscription charge failed", intervention: "Offer a retry and secure payment link before access interruption", outcome: "Subscription recovered or routed to retry follow-up", amount: 14900, customer: "NovaFit Studios", language: "en" },
+  { id: "mandate", title: "Mandate retry sequencer", signal: "Mandate debit returned by bank", intervention: "Run a bounded retry with payment-link fallback", outcome: "Payment recovered or manual escalation", amount: 78000, customer: "Indigo Learning Pvt Ltd", language: "hi" },
+];
+
 const risk = (amount: number, days: number, attempts: number, missed: boolean) => Math.min(100, Math.round(days * 1.5) + (amount >= 75000 ? 29 : amount >= 40000 ? 20 : amount >= 10000 ? 10 : 0) + Math.min(16, attempts * 8) + (missed ? 15 : 0));
 const reasons = (amount: number, days: number, attempts: number, missed: boolean) => [
   `${days} days overdue`,
@@ -74,7 +80,7 @@ const fallbackCase = (id: string) => {
 };
 
 export const recoveryDemo = {
-  async listScenarios(): Promise<any[]> { return (await apiService.api.get<{ scenarios: any[] }>("/api/recovery/scenarios")).data.scenarios; },
+  async listScenarios(): Promise<any[]> { try { return (await apiService.api.get<{ scenarios: any[] }>("/api/recovery/scenarios")).data.scenarios; } catch { return clone(scenarioTemplates); } },
   async activateScenario(id: string): Promise<RecoveryCase> { return (await apiService.api.post<RecoveryCase>(`/api/recovery/scenarios/${id}/activate`)).data; },
   async resetDemo(): Promise<RecoverySummary> {
     try {
