@@ -113,6 +113,14 @@ def test_action_preview_is_policy_bound_and_saved_in_audit_event():
     assert "Approved content:" in updated["timeline"][-1]["notes"]
 
 
+def test_repeated_promise_response_is_idempotent():
+    store = RecoveryStore()
+    first = store.simulate_response("rec-001", "PROMISE_TO_PAY")
+    second = store.simulate_response("rec-001", "PROMISE_TO_PAY")
+    assert second["status"] == "PROMISE_TO_PAY"
+    assert len(second["timeline"]) == len(first["timeline"])
+
+
 def test_benchmark_is_calculated_from_seeded_records():
     benchmark = calculate_benchmark(RecoveryStore().list_cases())
     assert benchmark["invoices_evaluated"] == 9

@@ -385,6 +385,11 @@ class RecoveryStore:
 
     def record_promise(self, case_id: str, customer_text: str, promise_date: Optional[str] = None) -> Dict[str, Any]:
         case = self._case(case_id)
+        # Replayed webhooks or an accidental second click must not create a
+        # second promise and second stop event in the audit trail.
+        if case.get("status") == "PROMISE_TO_PAY" and case.get("promise_to_pay_date"):
+            self._refresh_policy(case)
+            return deepcopy(case)
         extracted = extract_promise_to_pay(customer_text, money(case["amount"]), date(2026, 8, 29))
         if not extracted["promise_to_pay"]:
             raise ValueError("No promise-to-pay signal found in customer response")
