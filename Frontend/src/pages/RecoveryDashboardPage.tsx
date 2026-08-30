@@ -26,7 +26,7 @@ export default function RecoveryDashboardPage() {
     { key: "customer_name" as keyof RecoveryCase, label: "Customer", sortable: true, render: (_: unknown, row: RecoveryCase) => <div><p className="font-bold">{row.customer_name}</p><p className="text-xs text-gray-500">{row.invoice_number}</p></div> },
     { key: "amount" as keyof RecoveryCase, label: "Amount", sortable: true, render: (value: unknown) => <span className="font-bold">{rupees(Number(value))}</span> },
     { key: "days_overdue" as keyof RecoveryCase, label: "Days Overdue", sortable: true, render: (value: unknown) => `${value} days` },
-    { key: "risk_score" as keyof RecoveryCase, label: "Risk", sortable: true, render: (value: unknown) => <span className={Number(value) > 70 ? "font-black text-rose-700" : "font-black text-amber-700"}>{value}/100</span> },
+    { key: "risk_score" as keyof RecoveryCase, label: "Risk", sortable: true, render: (value: unknown) => <span className={Number(value) > 70 ? "font-black text-rose-700" : "font-black text-amber-700"}>{Number(value)}/100</span> },
     { key: "cause" as keyof RecoveryCase, label: "Reason", render: (value: unknown) => <span className="capitalize">{String(value)}</span> },
     { key: "recommended_action" as keyof RecoveryCase, label: "Next Action", render: (value: unknown) => <span className="text-xs font-bold px-2 py-1 rounded bg-[#faedcd] text-[#6e4627]">{title(String(value))}</span> },
     { key: "status" as keyof RecoveryCase, label: "Status", render: (value: unknown) => <span className="text-xs font-bold px-2 py-1 rounded bg-[#edf7ef] text-emerald-800">{title(String(value))}</span> },
