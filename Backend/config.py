@@ -49,9 +49,9 @@ class Settings(BaseSettings):
     
     openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
     groq_api_key: str = Field(default="", env="GROQ_API_KEY")
-    external_llm_diagnosis_enabled: bool = Field(default=False, env="ENABLE_EXTERNAL_LLM_DIAGNOSIS")
+    external_llm_diagnosis_enabled: bool = Field(default=False, validation_alias="ENABLE_EXTERNAL_LLM_DIAGNOSIS")
     google_api_key: str = Field(default="", env="GOOGLE_API_KEY")
-    gemini_model_name: str = Field(default="gemini-1.5-flash", env="GEMINI_MODEL_NAME")
+    gemini_model_name: str = Field(default="gemini-2.5-flash", env="GEMINI_MODEL_NAME")
     hf_api_key: str = Field(default="", env="HF_API_KEY")
     
     # ==================== TWILIO ====================
