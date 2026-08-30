@@ -34,7 +34,40 @@ The local demo starts at `/login`. These accounts exist only in the browser-loca
 | Administrator | `admin@sambhaash.demo` / `Admin@123` | Launch scenarios, reset the demo, and execute/simulate recovery actions. |
 | Recovery analyst | `user@sambhaash.demo` / `User@123` | View cases, score explanations, timelines, Conversations, and analytics. Operational controls are disabled. |
 
-This makes the approval boundary visible during a demo. It is **not production authentication**: the session is stored in local browser storage and is deliberately labelled as demo access. Production must enforce authentication and roles in the backend and database, not only the frontend.
+This makes the approval boundary visible during a demo. It is **not production authentication**: the session is stored in local browser storage and is deliberately labelled as demo access. The production implementation below enforces the same boundary using Supabase JWTs and backend authorization.
+
+## Production authentication setup
+
+The project supports real email/password authentication with Supabase. In production mode, Supabase issues the session JWT; the API validates it on every recovery request; and only users whose **server-managed** `app_metadata.recovery_role` is `admin` may mutate recovery state.
+
+1. Create a Supabase project, enable Email/Password authentication, and set your deployed frontend domain as the Site URL / allowed redirect URL.
+2. Apply [20260831_role_aware_auth.sql](supabase/migrations/20260831_role_aware_auth.sql) in the Supabase SQL editor (or through the Supabase CLI). It creates a default read-only profile for each authenticated user and enables RLS on those profiles.
+3. Set deployment secrets—never commit them:
+
+   ```bash
+   # Frontend environment
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+
+   # Backend environment
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   AUTH_REQUIRED=true
+   CORS_ORIGINS=https://your-frontend-domain.com
+   TRUSTED_HOSTS=your-api-domain.com
+   ```
+
+4. Invite/create users in Supabase Auth. New users are recovery analysts by default. Promote only trusted operators from secure server-side tooling using the service role—never from the browser:
+
+   ```ts
+   await supabase.auth.admin.updateUserById(userId, {
+     app_metadata: { recovery_role: "admin" },
+   });
+   ```
+
+5. Deploy frontend and backend with those variables. The login screen automatically switches from demo accounts to real Supabase credentials when `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are present.
+
+`AUTH_REQUIRED=true` is the production safety switch. Without a valid Supabase JWT, recovery API reads return `401`; operational actions return `403` unless the validated `recovery_role` is `admin`. The in-memory recovery records remain demo data until the next persistence phase.
 
 ## Explainable risk score
 
@@ -125,4 +158,4 @@ npm run build
 
 ## Production path
 
-The current recovery adapter is intentionally in-memory for a reliable no-credential demo. Its role selector is a browser-local presentation gate, not a security boundary. A production implementation would use Supabase/Auth0 (or equivalent), server-side role checks and database row-level policies; persist cases and audit events; receive verified payment webhooks; use consented communication channels; and retain only the minimum required customer data.
+The current recovery adapter is intentionally in-memory for a reliable no-credential demo. It now has an optional production authentication path using Supabase JWTs, server-side role checks, and RLS-protected user profiles. A complete production implementation would additionally persist cases and audit events, apply RLS to recovery data, receive verified payment webhooks, use consented communication channels, and retain only the minimum required customer data.

@@ -24,9 +24,9 @@ if settings.supabase_url and settings.supabase_service_role_key:
         logger.error(f"❌ Failed to initialize Supabase Auth Client: {e}")
 
 # Security scheme to extract Bearer token from header
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+async def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(security)) -> dict:
     """
     Dependency to verify a JWT access token using the official Supabase SDK.
     Injects the validated user dictionary into secure endpoints.
@@ -38,6 +38,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             detail="Authentication service is currently unavailable."
         )
 
+    if not credentials:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token.")
     token = credentials.credentials
 
     try:
@@ -52,11 +54,14 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             )
 
         # Convert User object properties to standard dictionary format for easy route usage
+        app_metadata = user.app_metadata or {}
         return {
             "id": user.id,
             "email": user.email,
-            "role": user.role,
-            "app_metadata": user.app_metadata,
+            # recovery_role is privileged app metadata. Do not use user_metadata
+            # here because a browser client can modify it.
+            "role": app_metadata.get("recovery_role", "user"),
+            "app_metadata": app_metadata,
             "user_metadata": user.user_metadata,
             "created_at": user.created_at
         }
@@ -67,3 +72,21 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Session has expired or is invalid."
         )
+
+
+async def require_recovery_user(credentials: HTTPAuthorizationCredentials | None = Depends(security)) -> dict:
+    """Require a verified Supabase session only when production auth is enabled.
+
+    Keeping this switch off preserves the credential-free fictional demo; a
+    deployment must set AUTH_REQUIRED=true together with Supabase credentials.
+    """
+    if not settings.auth_required:
+        return {"id": "offline-demo", "email": "offline-demo@sambhaash.local", "role": "admin", "demo_mode": True}
+    return await get_current_user(credentials)
+
+
+async def require_recovery_admin(current_user: dict = Depends(require_recovery_user)) -> dict:
+    """Server-side administrator boundary for any state-changing recovery action."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Administrator role required for recovery operations.")
+    return current_user

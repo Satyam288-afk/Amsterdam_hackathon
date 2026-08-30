@@ -1,4 +1,5 @@
 import { apiService } from "./apiService";
+import { isSupabaseConfigured } from "./supabase";
 import type { RecoveryBenchmark, RecoveryCase, RecoverySummary } from "../types/recovery";
 
 const stamp = "2026-08-29T09:00:00.000Z";
@@ -80,39 +81,44 @@ const fallbackCase = (id: string) => {
 };
 
 export const recoveryDemo = {
-  async listScenarios(): Promise<any[]> { try { return (await apiService.api.get<{ scenarios: any[] }>("/api/recovery/scenarios")).data.scenarios; } catch { return clone(scenarioTemplates); } },
+  async listScenarios(): Promise<any[]> { try { return (await apiService.api.get<{ scenarios: any[] }>("/api/recovery/scenarios")).data.scenarios; } catch (error) { if (isSupabaseConfigured) throw error; return clone(scenarioTemplates); } },
   async activateScenario(id: string): Promise<RecoveryCase> { return (await apiService.api.post<RecoveryCase>(`/api/recovery/scenarios/${id}/activate`)).data; },
   async resetDemo(): Promise<RecoverySummary> {
     try {
       return (await apiService.api.post<{ summary: RecoverySummary }>("/api/recovery/demo/reset")).data.summary;
-    } catch {
+    } catch (error) {
+      if (isSupabaseConfigured) throw error;
       fallbackCases = makeCases();
       fallbackCallSummaries = [];
       return clone(summary());
     }
   },
-  async getSummary(): Promise<RecoverySummary> { try { return (await apiService.api.get<RecoverySummary>("/api/recovery/summary")).data; } catch { return clone(summary()); } },
-  async listCases(): Promise<RecoveryCase[]> { try { return (await apiService.api.get<{ cases: RecoveryCase[] }>("/api/recovery/cases")).data.cases; } catch { return clone(fallbackCases); } },
-  async getCase(id: string): Promise<RecoveryCase> { try { return (await apiService.api.get<RecoveryCase>(`/api/recovery/cases/${id}`)).data; } catch { return clone(fallbackCase(id)); } },
-  async getBenchmark(): Promise<RecoveryBenchmark> { try { return (await apiService.api.get<RecoveryBenchmark>("/api/recovery/benchmark")).data; } catch { return benchmark(); } },
-  async listCallSummaries(): Promise<any[]> { try { return (await apiService.api.get<{ data: any[] }>("/api/recovery/call-summaries")).data.data; } catch { return clone(fallbackCallSummaries); } },
+  async getSummary(): Promise<RecoverySummary> { try { return (await apiService.api.get<RecoverySummary>("/api/recovery/summary")).data; } catch (error) { if (isSupabaseConfigured) throw error; return clone(summary()); } },
+  async listCases(): Promise<RecoveryCase[]> { try { return (await apiService.api.get<{ cases: RecoveryCase[] }>("/api/recovery/cases")).data.cases; } catch (error) { if (isSupabaseConfigured) throw error; return clone(fallbackCases); } },
+  async getCase(id: string): Promise<RecoveryCase> { try { return (await apiService.api.get<RecoveryCase>(`/api/recovery/cases/${id}`)).data; } catch (error) { if (isSupabaseConfigured) throw error; return clone(fallbackCase(id)); } },
+  async getBenchmark(): Promise<RecoveryBenchmark> { try { return (await apiService.api.get<RecoveryBenchmark>("/api/recovery/benchmark")).data; } catch (error) { if (isSupabaseConfigured) throw error; return benchmark(); } },
+  async listCallSummaries(): Promise<any[]> { try { return (await apiService.api.get<{ data: any[] }>("/api/recovery/call-summaries")).data.data; } catch (error) { if (isSupabaseConfigured) throw error; return clone(fallbackCallSummaries); } },
   async execute(id: string): Promise<RecoveryCase> {
-    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/execute`)).data; } catch {
+    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/execute`)).data; } catch (error) {
+      if (isSupabaseConfigured) throw error;
       const item = fallbackCase(id); item.attempts += 1; item.status = "IN_PROGRESS"; item.timeline.push(event("WhatsApp + payment link sent", "Demo action recorded; live WhatsApp remains optional.", "whatsapp_payment_link", "whatsapp", "sent")); return clone(item);
     }
   },
   async recordPromise(id: string, customerText: string): Promise<RecoveryCase> {
-    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/promise`, { customer_text: customerText })).data; } catch {
+    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/promise`, { customer_text: customerText })).data; } catch (error) {
+      if (isSupabaseConfigured) throw error;
       const item = fallbackCase(id); item.status = "PROMISE_TO_PAY"; item.promise_to_pay_date = "2026-09-04"; item.promise_to_pay_amount = item.amount; item.next_action_at = "2026-09-04T09:00:00+00:00"; item.recommended_action = "pause"; item.recommended_channel = "none"; item.policy_reason = "valid promise-to-pay is active"; item.timeline.push(event("Promise to pay recorded", `₹${item.amount.toLocaleString("en-IN")} by 2026-09-04; automated outreach stopped`, "promise_to_pay", "voice"), event("Automated outreach stopped", "Valid promise-to-pay is active", "pause", "system", "stopped")); return clone(item);
     }
   },
   async confirmPayment(id: string): Promise<RecoveryCase> {
-    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/payment-confirmed`)).data; } catch {
+    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/payment-confirmed`)).data; } catch (error) {
+      if (isSupabaseConfigured) throw error;
       const item = fallbackCase(id); item.status = "RECOVERED"; item.recovered_amount = item.amount; item.recommended_action = "close"; item.recommended_channel = "none"; item.policy_reason = "payment confirmed"; item.timeline.push(event("Payment confirmed", `₹${item.amount.toLocaleString("en-IN")} recovered`, "payment_confirmation", "payment_link", "recovered"), event("Case recovered", "No further outreach permitted", "close", "system", "closed")); return clone(item);
     }
   },
   async simulateResponse(id: string, responseType: "PAYMENT_CONFIRMED" | "PROMISE_TO_PAY" | "DISPUTE" | "PAYMENT_FAILED" | "NO_RESPONSE"): Promise<RecoveryCase> {
-    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/simulate-response`, { response_type: responseType })).data; } catch {
+    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/simulate-response`, { response_type: responseType })).data; } catch (error) {
+      if (isSupabaseConfigured) throw error;
       if (responseType === "PAYMENT_CONFIRMED") return this.confirmPayment(id);
       if (responseType === "PROMISE_TO_PAY") return this.recordPromise(id, "Friday ko payment kar denge.");
       const item = fallbackCase(id);
@@ -129,7 +135,8 @@ export const recoveryDemo = {
     }
   },
   async simulateCall(id: string, responseType: "PAYMENT_CONFIRMED" | "PROMISE_TO_PAY" | "DISPUTE"): Promise<RecoveryCase> {
-    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/simulate-call`, { response_type: responseType })).data; } catch {
+    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/simulate-call`, { response_type: responseType })).data; } catch (error) {
+      if (isSupabaseConfigured) throw error;
       const caseItem = await this.simulateResponse(id, responseType);
       const details = responseType === "PROMISE_TO_PAY" ? ["PROMISE RECORDED", `Customer committed to pay ₹${caseItem.amount.toLocaleString("en-IN")} by Friday; outreach paused.`, ["Hinglish recovery", "promise-to-pay", "outreach stopped"], []] : responseType === "PAYMENT_CONFIRMED" ? ["RECOVERED", `Customer confirmed payment of ₹${caseItem.amount.toLocaleString("en-IN")}; case closed.`, ["Hinglish recovery", "payment confirmed", "case closed"], []] : ["ESCALATED", "Customer disputed the invoice amount; routed to a human reviewer.", ["Hinglish recovery", "invoice dispute", "human escalation"], ["Invoice amount disputed"]];
       fallbackCallSummaries.unshift({ session_id: `demo-call-${fallbackCallSummaries.length + 1}`, case_id: id, lead_name: caseItem.customer_name, lead_phone: caseItem.phone, invoice_number: caseItem.invoice_number, classification: details[0], duration_seconds: 42, created_at: new Date().toISOString(), demo_data: true, next_action: caseItem.recommended_action, summary: { one_line_summary: details[1], topics_covered: details[2], objections_raised: details[3] } });

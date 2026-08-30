@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { isSupabaseConfigured, supabase } from "./supabase";
 
 export type DemoRole = "admin" | "user";
 
@@ -11,6 +12,8 @@ export interface DemoUser {
 
 interface AuthContextValue {
   user: DemoUser | null;
+  loading: boolean;
+  isProductionAuth: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => void;
 }
@@ -32,12 +35,41 @@ function readSession(): DemoUser | null {
   }
 }
 
+function fromSupabaseUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> }): DemoUser {
+  // App metadata is minted only by privileged server-side tooling. Never trust
+  // client-editable user_metadata to decide authorization.
+  const role = user.app_metadata?.recovery_role === "admin" ? "admin" : "user";
+  const fullName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "";
+  return { id: user.id, name: fullName || user.email?.split("@")[0] || "Recovery user", email: user.email || "", role };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<DemoUser | null>(readSession);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) { setLoading(false); return; }
+    let live = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (live) { setUser(data.session?.user ? fromSupabaseUser(data.session.user) : null); setLoading(false); }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (live) { setUser(session?.user ? fromSupabaseUser(session.user) : null); setLoading(false); }
+    });
+    return () => { live = false; subscription.unsubscribe(); };
+  }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
+    loading,
+    isProductionAuth: isSupabaseConfigured,
     signIn: async (email, password) => {
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (error || !data.user) throw new Error(error?.message || "Unable to sign in.");
+        setUser(fromSupabaseUser(data.user));
+        return;
+      }
       const account = DEMO_ACCOUNTS.find((candidate) => candidate.email === email.trim().toLowerCase() && candidate.password === password);
       if (!account) throw new Error("Use one of the demo accounts shown below.");
       const session: DemoUser = { id: account.id, name: account.name, email: account.email, role: account.role };
@@ -47,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut: () => {
       localStorage.removeItem(STORAGE_KEY);
       setUser(null);
+      if (isSupabaseConfigured) void supabase.auth.signOut();
     },
   }), [user]);
 
