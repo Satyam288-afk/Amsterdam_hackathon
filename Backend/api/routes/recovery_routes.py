@@ -35,6 +35,11 @@ async def list_recovery_cases():
     return {"demo_data": True, "cases": store.list_cases()}
 
 
+@router.get("/call-summaries")
+async def list_demo_call_summaries():
+    return {"demo_data": True, "data": store.list_call_summaries(), "total": len(store.list_call_summaries())}
+
+
 @router.get("/cases/{case_id}")
 async def get_recovery_case(case_id: str):
     case = store.get_case(case_id)
@@ -83,6 +88,16 @@ async def confirm_payment(case_id: str):
 async def simulate_customer_response(case_id: str, payload: SimulatedResponseRequest):
     try:
         return store.simulate_response(case_id, payload.response_type)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Recovery case not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@router.post("/cases/{case_id}/simulate-call")
+async def simulate_recovery_call(case_id: str, payload: SimulatedResponseRequest):
+    try:
+        return store.simulate_call(case_id, payload.response_type)
     except KeyError:
         raise HTTPException(status_code=404, detail="Recovery case not found")
     except ValueError as exc:

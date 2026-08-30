@@ -35,7 +35,7 @@ export default function RecoveryCasePage() {
   const completeCall = async (response: DemoResponse) => {
     setBusy(true);
     try {
-      setItem(await recoveryDemo.simulateResponse(item!.id, response));
+      setItem(await recoveryDemo.simulateCall(item!.id, response as "PROMISE_TO_PAY" | "PAYMENT_CONFIRMED" | "DISPUTE"));
       setCallOpen(false);
     } finally { setBusy(false); }
   };

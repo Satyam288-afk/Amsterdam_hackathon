@@ -249,11 +249,16 @@ class RecoveryStore:
     """In-memory adapter for a no-credentials demo. State lives for app lifetime."""
     def __init__(self) -> None:
         self._cases = seeded_cases()
+        self._call_summaries: List[Dict[str, Any]] = []
 
     def reset(self) -> Dict[str, Any]:
         """Restore the fictional dataset so the demo can always be replayed."""
         self._cases = seeded_cases()
+        self._call_summaries = []
         return self.summary()
+
+    def list_call_summaries(self) -> List[Dict[str, Any]]:
+        return deepcopy(list(reversed(self._call_summaries)))
 
     def list_cases(self) -> List[Dict[str, Any]]:
         return deepcopy(self._cases)
@@ -359,6 +364,42 @@ class RecoveryStore:
         else:
             raise ValueError("Unsupported demo response")
         self._refresh_policy(case)
+        return deepcopy(case)
+
+    def simulate_call(self, case_id: str, response_type: str) -> Dict[str, Any]:
+        """Run a labelled browser-call demo and persist its visible summary."""
+        before = self._case(case_id)
+        customer_name = before["customer_name"]
+        phone = before["phone"]
+        invoice = before["invoice_number"]
+        amount = money(before["amount"])
+        response_type = response_type.upper()
+        case = self.simulate_response(case_id, response_type)
+        outcome = {
+            "PROMISE_TO_PAY": ("PROMISE RECORDED", f"Customer committed to pay ₹{amount:,} by Friday; outreach paused.", ["Hinglish recovery", "promise-to-pay", "outreach stopped"], []),
+            "PAYMENT_CONFIRMED": ("RECOVERED", f"Customer confirmed payment of ₹{amount:,}; case closed.", ["Hinglish recovery", "payment confirmed", "case closed"], []),
+            "DISPUTE": ("ESCALATED", "Customer disputed the invoice amount; routed to a human reviewer.", ["Hinglish recovery", "invoice dispute", "human escalation"], ["Invoice amount disputed"]),
+        }.get(response_type)
+        if not outcome:
+            raise ValueError("Call simulation supports promise, payment confirmation, or dispute")
+        classification, one_line_summary, topics, objections = outcome
+        self._call_summaries.append({
+            "session_id": f"demo-call-{len(self._call_summaries) + 1:03d}",
+            "case_id": case_id,
+            "lead_name": customer_name,
+            "lead_phone": phone,
+            "invoice_number": invoice,
+            "classification": classification,
+            "duration_seconds": 42,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "demo_data": True,
+            "summary": {
+                "one_line_summary": one_line_summary,
+                "topics_covered": topics,
+                "objections_raised": objections,
+            },
+            "next_action": case["recommended_action"],
+        })
         return deepcopy(case)
 
     def mark_failed_promises(self, as_of: date) -> int:

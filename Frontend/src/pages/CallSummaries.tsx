@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { PhoneCall, Calendar, Clock, AlertCircle } from "lucide-react";
-import { apiService } from "../services/apiService";
+import { PhoneCall, Calendar, Clock, AlertCircle, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { recoveryDemo } from "../services/recoveryDemo";
 import { formatDateTime } from "../utils/formatters";
 
 export const CallSummaries: React.FC = () => {
   const [summaries, setSummaries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSummaries = async () => {
       try {
-        const result = await apiService.getSummaries();
-        setSummaries(result.data);
+        setSummaries(await recoveryDemo.listCallSummaries());
       } catch (error) {
         console.error("Failed to fetch summaries:", error);
       } finally {
@@ -27,7 +28,7 @@ export const CallSummaries: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-[#2d1e18] font-display">Call Summaries</h1>
-          <p className="text-sm font-semibold text-[#3d2b1f]/70">AI-generated insights from phone conversations</p>
+          <p className="text-sm font-semibold text-[#3d2b1f]/70">Outcomes from simulated recovery calls</p>
         </div>
       </div>
 
@@ -40,7 +41,7 @@ export const CallSummaries: React.FC = () => {
             <PhoneCall size={40} className="text-[#d4a373] mb-4 opacity-50" />
             <h3 className="text-xl font-bold text-[#2d1e18] mb-2">No Call Summaries Yet</h3>
             <p className="text-[#3d2b1f]/60 max-w-sm">
-              Your call summaries will appear here once AI generates them from your calls.
+              Complete a simulated recovery call and its transcript, outcome, and next action will appear here.
             </p>
           </div>
         ) : (
@@ -58,7 +59,7 @@ export const CallSummaries: React.FC = () => {
                       {item.classification || "UNSCORED"}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 font-medium">{item.lead_phone}</p>
+                  <p className="text-sm text-gray-500 font-medium">{item.lead_phone} · {item.invoice_number}</p>
                 </div>
                 
                 <div className="p-5 flex-1 bg-gray-50/50 space-y-4">
@@ -91,6 +92,7 @@ export const CallSummaries: React.FC = () => {
                       </ul>
                     </div>
                   )}
+                  <button onClick={() => navigate(`/dashboard/recovery/${item.case_id || "rec-001"}`)} className="flex items-center gap-1 text-sm font-bold text-[#8b572f] cursor-pointer">Open recovery case <ArrowRight size={15} /></button>
                 </div>
 
                 <div className="p-4 border-t border-gray-50 bg-white flex justify-between items-center text-xs text-gray-400 font-medium">

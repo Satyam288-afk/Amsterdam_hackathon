@@ -49,6 +49,7 @@ const makeCases = (): RecoveryCase[] => rawCases.map(([id, customer_name, invoic
 });
 
 let fallbackCases = makeCases();
+let fallbackCallSummaries: any[] = [];
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 const summary = (): RecoverySummary => {
@@ -78,6 +79,7 @@ export const recoveryDemo = {
       return (await apiService.api.post<{ summary: RecoverySummary }>("/api/recovery/demo/reset")).data.summary;
     } catch {
       fallbackCases = makeCases();
+      fallbackCallSummaries = [];
       return clone(summary());
     }
   },
@@ -85,6 +87,7 @@ export const recoveryDemo = {
   async listCases(): Promise<RecoveryCase[]> { try { return (await apiService.api.get<{ cases: RecoveryCase[] }>("/api/recovery/cases")).data.cases; } catch { return clone(fallbackCases); } },
   async getCase(id: string): Promise<RecoveryCase> { try { return (await apiService.api.get<RecoveryCase>(`/api/recovery/cases/${id}`)).data; } catch { return clone(fallbackCase(id)); } },
   async getBenchmark(): Promise<RecoveryBenchmark> { try { return (await apiService.api.get<RecoveryBenchmark>("/api/recovery/benchmark")).data; } catch { return benchmark(); } },
+  async listCallSummaries(): Promise<any[]> { try { return (await apiService.api.get<{ data: any[] }>("/api/recovery/call-summaries")).data.data; } catch { return clone(fallbackCallSummaries); } },
   async execute(id: string): Promise<RecoveryCase> {
     try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/execute`)).data; } catch {
       const item = fallbackCase(id); item.attempts += 1; item.status = "IN_PROGRESS"; item.timeline.push(event("WhatsApp + payment link sent", "Demo action recorded; live WhatsApp remains optional.", "whatsapp_payment_link", "whatsapp", "sent")); return clone(item);
@@ -115,6 +118,14 @@ export const recoveryDemo = {
         item.timeline.push(event("No customer response", "No reply was recorded; the next action remains policy controlled", "no_response", "system", "recorded"));
       }
       return clone(item);
+    }
+  },
+  async simulateCall(id: string, responseType: "PAYMENT_CONFIRMED" | "PROMISE_TO_PAY" | "DISPUTE"): Promise<RecoveryCase> {
+    try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/simulate-call`, { response_type: responseType })).data; } catch {
+      const caseItem = await this.simulateResponse(id, responseType);
+      const details = responseType === "PROMISE_TO_PAY" ? ["PROMISE RECORDED", `Customer committed to pay ₹${caseItem.amount.toLocaleString("en-IN")} by Friday; outreach paused.`, ["Hinglish recovery", "promise-to-pay", "outreach stopped"], []] : responseType === "PAYMENT_CONFIRMED" ? ["RECOVERED", `Customer confirmed payment of ₹${caseItem.amount.toLocaleString("en-IN")}; case closed.`, ["Hinglish recovery", "payment confirmed", "case closed"], []] : ["ESCALATED", "Customer disputed the invoice amount; routed to a human reviewer.", ["Hinglish recovery", "invoice dispute", "human escalation"], ["Invoice amount disputed"]];
+      fallbackCallSummaries.unshift({ session_id: `demo-call-${fallbackCallSummaries.length + 1}`, case_id: id, lead_name: caseItem.customer_name, lead_phone: caseItem.phone, invoice_number: caseItem.invoice_number, classification: details[0], duration_seconds: 42, created_at: new Date().toISOString(), demo_data: true, next_action: caseItem.recommended_action, summary: { one_line_summary: details[1], topics_covered: details[2], objections_raised: details[3] } });
+      return caseItem;
     }
   },
 };

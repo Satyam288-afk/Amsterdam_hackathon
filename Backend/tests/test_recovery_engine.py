@@ -81,6 +81,15 @@ def test_dispute_simulation_is_bounded_to_human_escalation():
     assert updated["recommended_action"] == "human_escalation"
 
 
+def test_simulated_call_creates_a_visible_summary():
+    store = RecoveryStore()
+    store.simulate_call("rec-001", "PROMISE_TO_PAY")
+    summary = store.list_call_summaries()[0]
+    assert summary["lead_name"] == "Aarav Mehta"
+    assert summary["classification"] == "PROMISE RECORDED"
+    assert "outreach paused" in summary["summary"]["one_line_summary"]
+
+
 def test_benchmark_is_calculated_from_seeded_records():
     benchmark = calculate_benchmark(RecoveryStore().list_cases())
     assert benchmark["invoices_evaluated"] == 9
