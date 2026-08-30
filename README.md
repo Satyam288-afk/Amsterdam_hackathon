@@ -95,6 +95,7 @@ Open the Vite URL shown in the terminal, then visit `/dashboard/recovery`.
 cd Backend
 python -m pytest tests/test_recovery_engine.py -q
 python scripts/run_recovery_benchmark.py
+python scripts/verify_recovery_demo.py
 
 cd ../Frontend
 npm run build
