@@ -1,48 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
-import { supabase } from "../../services/supabase";
+import { useDemoAuth, type DemoRole } from "../../services/demoAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRole?: DemoRole;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<any>(null);
-
-  useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    // Listen to real-time auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession);
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#fefae0] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full border-4 border-[#d4a373] border-t-transparent animate-spin" />
-          <p className="text-[#3d2b1f] font-semibold text-sm animate-pulse">Securing session...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    // If no active session, redirect back to landing page
-    return <Navigate to="/" replace />;
-  }
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
+  const { user } = useDemoAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (requiredRole && user.role !== requiredRole) return <Navigate to="/dashboard/recovery" replace />;
 
   return <>{children}</>;
 };

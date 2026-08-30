@@ -5,6 +5,7 @@ import MetricCard from "../components/MetricCard";
 import DataTable from "../components/DataTable";
 import { recoveryDemo } from "../services/recoveryDemo";
 import type { RecoveryCase, RecoverySummary } from "../types/recovery";
+import { useDemoAuth } from "../services/demoAuth";
 
 const rupees = (value: number) => `₹${value.toLocaleString("en-IN")}`;
 const title = (value: string) => value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -15,6 +16,8 @@ export default function RecoveryDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
   const navigate = useNavigate();
+  const { user } = useDemoAuth();
+  const isAdmin = user?.role === "admin";
 
   const load = () => Promise.all([recoveryDemo.listCases(), recoveryDemo.getSummary()]).then(([allCases, summary]) => {
       setCases(allCases); setMetrics(summary); setLoading(false);
@@ -44,7 +47,7 @@ export default function RecoveryDashboardPage() {
   return <div className="space-y-6">
     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
       <div><div className="inline-flex rounded-full bg-[#faedcd] px-3 py-1 text-xs font-black tracking-wider text-[#8b572f]">DEMO DATA · FICTIONAL INVOICES</div><h1 className="mt-3 text-3xl font-black text-[#2d1e18] font-display">AI Revenue Recovery</h1><p className="mt-1 text-[#3d2b1f]/70">Detect → Diagnose → Decide → Act → Recover</p></div>
-      <div className="flex flex-wrap items-center gap-3"><button onClick={() => navigate("/dashboard/recovery/rec-001")} className="rounded-lg bg-[#d4a373] px-4 py-2.5 text-sm font-bold text-white cursor-pointer">Run golden demo</button><button disabled={resetting} onClick={resetDemo} className="rounded-lg border border-[#d4a373]/50 bg-white px-4 py-2.5 text-sm font-bold text-[#6e4627] disabled:opacity-50 cursor-pointer">{resetting ? "Resetting…" : "Reset demo"}</button></div>
+      <div className="flex flex-wrap items-center gap-3"><button onClick={() => navigate("/dashboard/recovery/rec-001")} className="rounded-lg bg-[#d4a373] px-4 py-2.5 text-sm font-bold text-white cursor-pointer">Run golden demo</button>{isAdmin && <button disabled={resetting} onClick={resetDemo} className="rounded-lg border border-[#d4a373]/50 bg-white px-4 py-2.5 text-sm font-bold text-[#6e4627] disabled:opacity-50 cursor-pointer">{resetting ? "Resetting…" : "Reset demo"}</button>}</div>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <MetricCard label="Revenue at Risk" value={rupees(metrics.revenue_at_risk)} icon={<AlertTriangle />} trend="down" trendValue="Open receivables" />

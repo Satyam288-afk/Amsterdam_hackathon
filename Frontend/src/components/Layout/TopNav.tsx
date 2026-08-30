@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Menu, Bell, LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../services/supabase";
+import { useDemoAuth } from "../../services/demoAuth";
 
 interface TopNavProps {
   onMenuClick: () => void;
@@ -10,76 +10,16 @@ interface TopNavProps {
 
 export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, hideMenuButton }) => {
   const navigate = useNavigate();
+  const { user, signOut } = useDemoAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notifications] = useState(3);
 
-  const [currentUser, setCurrentUser] = React.useState({
-    name: "ADMIN",
-    email: "admin@sambhaash.ai",
-    role: "sambhaash ai",
-    avatar: ""
-  });
-
-  React.useEffect(() => {
-    // Helper function to read saved designation from localStorage
-    const getSavedRole = () => {
-      const saved = localStorage.getItem("user_profile");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.role) return parsed.role;
-        } catch (e) {}
-      }
-      return "Administrator";
-    };
-
-    const syncUserData = () => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          const meta = session.user.user_metadata;
-          setCurrentUser({
-            name: meta?.full_name || session.user.email?.split("@")[0] || "User",
-            email: session.user.email || "",
-            role: getSavedRole(), // 💾 Only role/designation is from local storage
-            avatar: meta?.avatar_url || ""
-          });
-        }
-      });
-    };
-
-    // 1. Initial Sync
-    syncUserData();
-
-    // 2. Listen to real-time auth changes (Sign-in / Sign-out)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        syncUserData();
-      } else {
-        // Fallback default if not logged in
-        setCurrentUser({
-          name: "ADMIN",
-          email: "admin@sambhaash.ai",
-          role: "sambhaash ai",
-          avatar: ""
-        });
-      }
-    });
-
-    // 3. Listen to local profile updates to synchronize the custom designation immediately
-    window.addEventListener("user-profile-updated", syncUserData);
-    window.addEventListener("storage", syncUserData);
-
-    return () => {
-      subscription.unsubscribe();
-      window.removeEventListener("user-profile-updated", syncUserData);
-      window.removeEventListener("storage", syncUserData);
-    };
-  }, []);
+  const currentUser = { name: user?.name || "Guest", email: user?.email || "", role: user?.role === "admin" ? "Administrator" : "Recovery analyst", avatar: "" };
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      navigate("/");
+      signOut();
+      navigate("/login");
     } catch (e) {
       console.error("Sign out failed", e);
     }

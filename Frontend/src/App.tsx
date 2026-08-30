@@ -16,14 +16,18 @@ import RecoveryDashboardPage from "./pages/RecoveryDashboardPage";
 import RecoveryCasePage from "./pages/RecoveryCasePage";
 import BenchmarkPage from "./pages/BenchmarkPage";
 import ScenarioLabPage from "./pages/ScenarioLabPage";
+import LoginPage from "./pages/LoginPage";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import { AuthProvider } from "./services/demoAuth";
 
 function App() {
   return (
-    <BrowserRouter>
+    <AuthProvider><BrowserRouter>
       <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/dashboard/*" element={<MainLayout>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/dashboard/*" element={<ProtectedRoute><MainLayout>
               <Routes>
                 <Route path="recovery" element={<RecoveryDashboardPage />} />
                 <Route path="recovery/:id" element={<RecoveryCasePage />} />
@@ -31,7 +35,7 @@ function App() {
                 <Route path="leads/:id" element={<LeadDetailPage />} />
                 <Route path="analytics" element={<RecoveryAnalyticsPage />} />
                 <Route path="benchmark" element={<BenchmarkPage />} />
-                <Route path="scenarios" element={<ScenarioLabPage />} />
+                <Route path="scenarios" element={<ProtectedRoute requiredRole="admin"><ScenarioLabPage /></ProtectedRoute>} />
                 <Route path="appendix" element={<AppendixPage />} />
                 <Route path="rm" element={<RMPage />} />
                 <Route path="queue" element={<QueueDashboard />} />
@@ -39,10 +43,10 @@ function App() {
                 <Route path="settings/profile" element={<ProfileSettingsPage />} />
                 <Route path="*" element={<Navigate to="/dashboard/recovery" replace />} />
               </Routes>
-            </MainLayout>} />
+            </MainLayout></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </BrowserRouter></AuthProvider>
   );
 }
 

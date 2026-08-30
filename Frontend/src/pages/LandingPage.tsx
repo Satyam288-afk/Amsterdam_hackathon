@@ -12,10 +12,12 @@ import {
   UserCheck
 } from "lucide-react";
 import Footer from "../components/Layout/Footer";
+import { useDemoAuth } from "../services/demoAuth";
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const handleDashboardClick = () => navigate("/dashboard/recovery");
+  const { user } = useDemoAuth();
+  const handleDashboardClick = () => navigate(user ? "/dashboard/recovery" : "/login");
 
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
