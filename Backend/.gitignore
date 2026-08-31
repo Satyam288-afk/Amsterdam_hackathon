@@ -95,6 +95,7 @@ npm-debug.log
 *.db
 *.sqlite
 *.sqlite3
+data/
 
 # IDE temp files
 .project

@@ -49,6 +49,7 @@ export interface RecoveryCase {
   policy_reason: string;
   action_preview?: ActionPreview;
   last_diagnosis?: DiagnosisRecord;
+  diagnosis_requires_review?: boolean;
   attempts: number;
   max_attempts: number;
   promise_to_pay_date?: string | null;

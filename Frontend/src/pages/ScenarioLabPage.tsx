@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, CreditCard, RefreshCw, ShoppingCart } from "lucide-react";
+import { AlertTriangle, ArrowRight, CreditCard, RefreshCw, ShoppingCart } from "lucide-react";
 import { recoveryDemo } from "../services/recoveryDemo";
 
-const icons: Record<string, ReactNode> = { checkout: <ShoppingCart />, subscription: <CreditCard />, mandate: <RefreshCw /> };
+const icons: Record<string, ReactNode> = { degradation: <AlertTriangle />, checkout: <ShoppingCart />, subscription: <CreditCard />, mandate: <RefreshCw /> };
 const rupees = (value: number) => `₹${value.toLocaleString("en-IN")}`;
 
 export default function ScenarioLabPage() {

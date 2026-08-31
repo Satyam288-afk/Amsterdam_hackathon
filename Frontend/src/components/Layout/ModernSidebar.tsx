@@ -9,7 +9,7 @@ import {
   BarChart3,
   HandCoins,
   MessagesSquare,
-  Scale,
+  Scale, ClipboardCheck,
   FlaskConical
 } from "lucide-react";
 import clsx from "clsx";
@@ -41,6 +41,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ isOpen, onToggle }) => {
     { id: "summaries", label: "Conversations", path: "/dashboard/summaries", icon: MessagesSquare },
     { id: "analytics", label: "Analytics", path: "/dashboard/analytics", icon: BarChart3 },
     { id: "benchmark", label: "Benchmark", path: "/dashboard/benchmark", icon: Scale },
+    { id: "evaluation", label: "AI Evaluation", path: "/dashboard/evaluation", icon: ClipboardCheck },
     ...(user?.role === "admin" ? [{ id: "scenarios", label: "Scenario Lab", path: "/dashboard/scenarios", icon: FlaskConical }] : []),
     { 
       id: "settings", 

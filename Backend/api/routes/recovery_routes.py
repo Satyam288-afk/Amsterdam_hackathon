@@ -10,12 +10,15 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from services.recovery.engine import RecoveryStore, calculate_benchmark
+from services.recovery.engine import calculate_benchmark
 from services.recovery.diagnosis import diagnose_customer_reply
+from services.recovery.persistence import SQLiteRecoveryStore
+from services.recovery.evaluation import load_evaluation, run_diagnosis_evaluation, save_evaluation
+from config import settings
 from api.auth import require_recovery_admin, require_recovery_user
 
 router = APIRouter(prefix="/api/recovery", tags=["AI Revenue Recovery Demo"], dependencies=[Depends(require_recovery_user)])
-store = RecoveryStore()
+store = SQLiteRecoveryStore(settings.recovery_sqlite_path)
 
 
 class PromiseRequest(BaseModel):
@@ -144,3 +147,15 @@ async def advance_failed_promises(as_of: str = "2026-09-05"):
 @router.get("/benchmark")
 async def recovery_benchmark():
     return calculate_benchmark(store.list_cases())
+
+
+@router.get("/evaluation")
+async def get_diagnosis_evaluation():
+    return {"result": load_evaluation(settings.diagnosis_evaluation_path)}
+
+
+@router.post("/evaluation/run", dependencies=[Depends(require_recovery_admin)])
+async def run_diagnosis_evaluation_endpoint():
+    result = run_diagnosis_evaluation()
+    save_evaluation(settings.diagnosis_evaluation_path, result)
+    return result

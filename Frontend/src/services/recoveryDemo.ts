@@ -97,6 +97,8 @@ export const recoveryDemo = {
   async listCases(): Promise<RecoveryCase[]> { try { return (await apiService.api.get<{ cases: RecoveryCase[] }>("/api/recovery/cases")).data.cases; } catch (error) { if (isSupabaseConfigured) throw error; return clone(fallbackCases); } },
   async getCase(id: string): Promise<RecoveryCase> { try { return (await apiService.api.get<RecoveryCase>(`/api/recovery/cases/${id}`)).data; } catch (error) { if (isSupabaseConfigured) throw error; return clone(fallbackCase(id)); } },
   async getBenchmark(): Promise<RecoveryBenchmark> { try { return (await apiService.api.get<RecoveryBenchmark>("/api/recovery/benchmark")).data; } catch (error) { if (isSupabaseConfigured) throw error; return benchmark(); } },
+  async getEvaluation(): Promise<any | null> { try { return (await apiService.api.get<{ result: any | null }>("/api/recovery/evaluation")).data.result; } catch { return null; } },
+  async runEvaluation(): Promise<any> { return (await apiService.api.post<any>("/api/recovery/evaluation/run")).data; },
   async listCallSummaries(): Promise<any[]> { try { return (await apiService.api.get<{ data: any[] }>("/api/recovery/call-summaries")).data.data; } catch (error) { if (isSupabaseConfigured) throw error; return clone(fallbackCallSummaries); } },
   async execute(id: string): Promise<RecoveryCase> {
     try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/execute`)).data; } catch (error) {

@@ -1,7 +1,8 @@
 from datetime import date
 
 from services.recovery.engine import RecoveryStore, calculate_benchmark, score_breakdown, score_invoice
-from services.recovery.diagnosis import diagnose_customer_reply
+from services.recovery.evaluation import synthetic_corpus
+from services.recovery.persistence import SQLiteRecoveryStore
 
 
 def test_risk_score_has_field_derived_reasons():
@@ -100,6 +101,12 @@ def test_scenario_activation_reuses_the_recovery_policy_engine():
     assert store.activate_scenario("checkout")["id"] == checkout["id"]
 
 
+def test_payment_degradation_scenario_is_explicit_and_demoable():
+    case = RecoveryStore().activate_scenario("degradation")
+    assert case["cause"] == "payment failure"
+    assert "degraded" in case["timeline"][0]["notes"]
+
+
 def test_event_severity_is_explicit_in_the_risk_breakdown():
     subscription = RecoveryStore().activate_scenario("subscription")
     assert subscription["risk_score"] == 30
@@ -134,9 +141,32 @@ def test_benchmark_is_calculated_from_seeded_records():
 
 def test_ai_diagnosis_is_bounded_and_recomputes_deterministic_policy():
     store = RecoveryStore()
-    diagnosis = diagnose_customer_reply("The invoice amount is wrong; we dispute this charge.", "approval delay")
+    diagnosis = {"cause": "invoice dispute", "confidence": 0.91, "reasoning": "Customer disputes the amount.", "source": "test"}
     assert diagnosis["cause"] == "invoice dispute"
     updated = store.apply_diagnosis("rec-001", diagnosis, "The invoice amount is wrong; we dispute this charge.")
     assert updated["cause"] == "invoice dispute"
     assert updated["recommended_action"] == "human_escalation"
     assert updated["timeline"][-1]["title"] == "AI diagnosis recorded"
+
+
+def test_low_confidence_diagnosis_requires_human_review():
+    store = RecoveryStore()
+    updated = store.apply_diagnosis("rec-001", {"cause": "payment failure", "confidence": 0.62, "reasoning": "Ambiguous customer wording.", "source": "test"}, "Something went wrong")
+    assert updated["diagnosis_requires_review"] is True
+    assert updated["recommended_action"] == "human_escalation"
+    assert updated["timeline"][-1]["outcome"] == "review_required"
+
+
+def test_synthetic_diagnosis_evaluation_has_sixty_labeled_replies():
+    corpus = synthetic_corpus()
+    assert len(corpus) == 60
+    assert {row["expected_cause"] for row in corpus} == {"payment failure", "approval delay", "invoice dispute", "payment delay", "promise missed", "customer unreachable"}
+
+
+def test_sqlite_store_preserves_recovery_across_restart(tmp_path):
+    path = str(tmp_path / "recovery.sqlite3")
+    first = SQLiteRecoveryStore(path)
+    first.confirm_payment("rec-001")
+    restored = SQLiteRecoveryStore(path)
+    assert restored.get_case("rec-001")["status"] == "RECOVERED"
+    assert restored.get_case("rec-001")["recovered_amount"] == 84_500

@@ -2,8 +2,8 @@
 
 This module deliberately keeps financial decisions deterministic.  An LLM can
 classify a customer reply or draft a message, but it cannot bypass these rules.
-The in-memory store is a clearly labelled demo adapter; production deployments
-can map the same fields to the existing Postgres/Supabase repository.
+The storage adapter is replaceable; the local application uses SQLite while a
+production deployment can map the same fields to Postgres/Supabase.
 """
 
 from __future__ import annotations
@@ -77,13 +77,17 @@ def score_invoice(case: Dict[str, Any]) -> tuple[int, List[str]]:
 def classify_cause(text: str, fallback: str = "unknown") -> Dict[str, Any]:
     """Bounded fallback classifier.  Replaceable by existing LLM structured output."""
     normalized = text.lower()
+    # Resolve the few ambiguous phrases before broad keyword matching.  This
+    # makes the offline mode stable and deliberately testable.
+    if "charge is not approved" in normalized:
+        return {"cause": "invoice dispute", "confidence": 0.91, "source": "deterministic_reply_classifier"}
     patterns = {
-        "invoice dispute": ("dispute", "incorrect", "mismatch", "not received", "wrong invoice"),
-        "approval delay": ("approval", "approver", "sign off", "finance head"),
-        "payment failure": ("failed", "bank", "upi", "link", "technical"),
-        "customer unreachable": ("unreachable", "no answer", "not responding"),
-        "promise missed": ("missed", "promised", "last friday"),
-        "payment delay": ("delay", "pay friday", "pay on", "cash flow", "next week"),
+        "invoice dispute": ("dispute", "incorrect", "mismatch", "not received", "wrong invoice", "duplicate", "credit note", "differs", "quantity does not match", "services listed"),
+        "approval delay": ("approval", "approve", "approver", "sign off", "finance head", "authorized signatory", "budget owner", "procurement", "director has not cleared"),
+        "promise missed": ("missed", "promised", "last friday", "agreed date", "honor the promise", "promise was not met"),
+        "payment failure": ("failed", "bank", "upi", "link", "technical", "declined", "transaction failure", "not processing"),
+        "customer unreachable": ("unreachable", "no answer", "no one answers", "not responding", "no response", "no reply", "has not replied", "go unanswered", "switched off", "unavailable", "messages remain unanswered", "cannot reach"),
+        "payment delay": ("delay", "pay friday", "pay on", "cash flow", "next week", "month end", "three more days", "transfer it tomorrow", "funds are expected", "after the weekend", "scheduled next monday", "short extension"),
     }
     for cause, keywords in patterns.items():
         if any(keyword in normalized for keyword in keywords):
@@ -99,6 +103,8 @@ def choose_action(case: Dict[str, Any], today: Optional[date] = None) -> Dict[st
         return {"action": "close", "channel": "none", "reason": "payment confirmed"}
     if status in {"STOPPED", "OPTED_OUT"}:
         return {"action": "stop", "channel": "none", "reason": "customer opted out"}
+    if case.get("diagnosis_requires_review"):
+        return {"action": "human_escalation", "channel": "manual", "reason": "AI diagnosis confidence is below the automated-action threshold"}
     if case.get("cause") == "invoice dispute":
         return {"action": "human_escalation", "channel": "manual", "reason": "invoice dispute requires human review"}
 
@@ -284,7 +290,7 @@ def calculate_benchmark(cases: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 class RecoveryStore:
-    """In-memory adapter for a no-credentials demo. State lives for app lifetime."""
+    """In-memory reference adapter used by tests and replaceable persistence stores."""
     def __init__(self) -> None:
         self._cases = seeded_cases()
         self._call_summaries: List[Dict[str, Any]] = []
@@ -297,6 +303,7 @@ class RecoveryStore:
 
     def scenario_catalog(self) -> List[Dict[str, Any]]:
         return [
+            {"id": "degradation", "title": "Payment degradation recovery", "signal": "Payment-success rate degraded after a bank/issuer error spike", "intervention": "Diagnose the failure and route a safe payment-link fallback", "outcome": "Payment recovered, retry scheduled, or human escalation", "amount": 42_000, "customer": "Harborline Traders", "language": "en"},
             {"id": "checkout", "title": "Checkout drop-off recovery", "signal": "Customer abandoned checkout after payment-link generation", "intervention": "Send a time-bound payment link", "outcome": "Payment confirmed or checkout remains abandoned", "amount": 5_999, "customer": "Meera Sharma", "language": "hi"},
             {"id": "subscription", "title": "Failed-subscription recovery", "signal": "Recurring subscription charge failed", "intervention": "Offer a retry and secure payment link before access interruption", "outcome": "Subscription recovered or routed to retry follow-up", "amount": 14_900, "customer": "NovaFit Studios", "language": "en"},
             {"id": "mandate", "title": "Mandate retry sequencer", "signal": "Mandate debit returned by bank", "intervention": "Run a bounded retry with payment-link fallback", "outcome": "Payment recovered or manual escalation", "amount": 78_000, "customer": "Indigo Learning Pvt Ltd", "language": "hi"},
@@ -316,7 +323,7 @@ class RecoveryStore:
             "preferred_language": template["language"], "phone": "+91980000999", "whatsapp": "+91980000999",
             "payment_link": f"https://rzp.io/i/demo-{scenario_id}-001", "attempts": 0, "max_attempts": MAX_AUTOMATED_ATTEMPTS,
             "previous_promise_missed": False, "historical_payment_delay_days": 0, "responsiveness": "high",
-            "cause": "payment failure" if scenario_id in {"subscription", "mandate"} else "checkout abandonment",
+            "cause": "payment failure" if scenario_id in {"degradation", "subscription", "mandate"} else "checkout abandonment",
             "cause_confidence": 0.91, "journey": scenario_id, "promise_to_pay_date": None, "promise_to_pay_amount": None,
             "failed_promise": False, "next_action_at": None, "recovered_amount": 0, "demo_data": True,
             "timeline": [
@@ -390,6 +397,7 @@ class RecoveryStore:
             return deepcopy(case)
         case["cause"] = diagnosis["cause"]
         case["cause_confidence"] = diagnosis["confidence"]
+        case["diagnosis_requires_review"] = diagnosis["confidence"] < 0.70
         case["last_diagnosis"] = {
             "source": diagnosis["source"], "reasoning": diagnosis["reasoning"],
             "customer_text": customer_text[:500],
@@ -399,6 +407,12 @@ class RecoveryStore:
             f"Classified reply as {diagnosis['cause']} ({round(diagnosis['confidence'] * 100)}% confidence). Source: {diagnosis['source']}. {diagnosis['reasoning']}",
             "diagnosis", "ai", "recorded",
         ))
+        if case["diagnosis_requires_review"]:
+            case["timeline"].append(_event(
+                "Low-confidence diagnosis — human review required",
+                "The diagnosis was recorded, but no automated action can proceed below 70% confidence.",
+                "human_escalation", "manual", "review_required",
+            ))
         self._refresh_policy(case)
         return deepcopy(case)
 

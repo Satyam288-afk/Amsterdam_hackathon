@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     supabase_url: str = Field(default="", env="SUPABASE_URL")
     supabase_service_role_key: str = Field(default="", env="SUPABASE_SERVICE_ROLE_KEY")
     auth_required: bool = Field(default=False, env="AUTH_REQUIRED")
+    recovery_sqlite_path: str = Field(default="data/recovery_demo.sqlite3", env="RECOVERY_SQLITE_PATH")
+    diagnosis_evaluation_path: str = Field(default="data/diagnosis_evaluation.json", env="DIAGNOSIS_EVALUATION_PATH")
     supabase_bucket_name: str = Field(default="knowledge-base-documents", env="SUPABASE_BUCKET_NAME")
     db_pool_min_size: int = Field(default=5, env="DB_POOL_MIN_SIZE")
     db_pool_max_size: int = Field(default=20, env="DB_POOL_MAX_SIZE")

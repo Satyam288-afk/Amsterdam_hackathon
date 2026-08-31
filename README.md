@@ -17,6 +17,7 @@ Revenue signal → explainable risk score → Gemini diagnosis → policy-bound 
 - Deterministic, explainable risk score capped at 100.
 - Policy engine that selects approved actions and cannot be overridden by AI.
 - Idempotent payment and promise-to-pay handlers: replayed events do not double-count money or duplicate audit records.
+- Durable local SQLite recovery store: cases, outcomes, and audit events survive an application restart.
 - Resettable fictional-data adapter for a reliable demonstration.
 
 ### Bounded AI diagnosis
@@ -26,6 +27,7 @@ Revenue signal → explainable risk score → Gemini diagnosis → policy-bound 
 - Gemini cannot recommend, execute, or bypass a recovery action.
 - Transparent deterministic fallback when Gemini is disabled or unavailable.
 - Each diagnosis is added to the audit timeline, then the deterministic risk and policy engine recalculates the intervention.
+- Diagnoses below 70% confidence are explicitly routed to human review; no automated outreach can continue.
 
 ### Recovery controls
 
@@ -42,8 +44,9 @@ Revenue signal → explainable risk score → Gemini diagnosis → policy-bound 
 - Hinglish recovery dialer simulation, clearly labelled; it never calls a real number.
 - Conversations page with simulated-call outcomes.
 - Live analytics which update from the current demonstration run.
-- Scenario Lab for checkout abandonment, failed subscriptions, and mandate retry—all using the shared engine and policy.
-- Synthetic batch benchmark calculated from nine fictional invoices.
+- Scenario Lab for payment degradation, checkout abandonment, failed subscriptions, and mandate retry—all using the shared engine and policy.
+- 60-reply synthetic diagnosis evaluation with per-cause accuracy, source/fallback counts, and a saved reproducible report.
+- Synthetic batch benchmark calculated from nine fictional invoices; it remains clearly labelled as a small illustrative benchmark, not real merchant performance.
 
 ### Access control
 
@@ -96,7 +99,8 @@ Every contribution, including zero-point signals, is shown on the case screen fo
 5. Open the recovery dialer and choose **Payment complete ho gaya**.
 6. Show the closed case, recovered amount, and no-more-outreach stop rule.
 7. Open **Conversations** and **Analytics** to prove the same outcome across the system.
-8. Optionally use **Scenario Lab** for checkout, subscription, or mandate-retry flows.
+8. Optionally use **Scenario Lab** for payment degradation, checkout, subscription, or mandate-retry flows.
+9. Open **AI Evaluation**, run the 60-reply synthetic evaluation, and inspect per-cause accuracy plus provider-fallback counts.
 
 ## Run locally
 
@@ -131,6 +135,7 @@ Create `Backend/.env` locally. It is ignored by Git and must never be committed.
 GOOGLE_API_KEY=your_gemini_api_key
 ENABLE_EXTERNAL_LLM_DIAGNOSIS=true
 GEMINI_MODEL_NAME=gemini-2.5-flash
+RECOVERY_SQLITE_PATH=data/recovery_demo.sqlite3
 ```
 
 When configured, the UI displays `Gemini Structured Output`. Without a valid provider response, it displays the deterministic fallback source and continues safely.
@@ -161,6 +166,7 @@ Roles come only from server-managed `app_metadata.recovery_role`. Administrators
 ```bash
 cd Backend
 python -m pytest tests/test_recovery_engine.py -q
+python scripts/run_diagnosis_evaluation.py
 python scripts/run_recovery_benchmark.py
 python scripts/verify_recovery_demo.py
 
@@ -180,6 +186,8 @@ npm run build
 | `GET /api/recovery/call-summaries` | View conversation outcomes |
 | `GET /api/recovery/scenarios` | View scenario catalog |
 | `POST /api/recovery/scenarios/{id}/activate` | Launch a scenario, admin only |
+| `GET /api/recovery/evaluation` | Read the most recent synthetic diagnosis evaluation |
+| `POST /api/recovery/evaluation/run` | Run and save the 60-reply evaluation, admin only |
 | `POST /api/recovery/demo/reset` | Reset fictional demo records, admin only |
 
 ## Scope and integrity
@@ -187,5 +195,5 @@ npm run build
 - All bundled invoices, customer names, phone numbers, calls, and outcomes are fictional.
 - The dialer is an in-browser simulation; no real number is called.
 - Gemini diagnosis is real when configured, but it is limited to structured classification.
-- The benchmark is a reproducible synthetic assumption model, not a claim about real merchant performance.
-- The current recovery store is in memory. Production should persist cases and audit events, enforce row-level access to recovery data, consume verified payment webhooks, and use consented communication channels.
+- The benchmark and diagnosis evaluation use reproducible synthetic data, not a claim about real merchant performance.
+- The local recovery store is durable SQLite for a single-node demo. A production rollout should use managed Postgres, enforce row-level access to recovery data, consume verified payment webhooks, and use consented communication channels.

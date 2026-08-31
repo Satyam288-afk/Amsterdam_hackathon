@@ -16,6 +16,7 @@ import RecoveryDashboardPage from "./pages/RecoveryDashboardPage";
 import RecoveryCasePage from "./pages/RecoveryCasePage";
 import BenchmarkPage from "./pages/BenchmarkPage";
 import ScenarioLabPage from "./pages/ScenarioLabPage";
+import DiagnosisEvaluationPage from "./pages/DiagnosisEvaluationPage";
 import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import { AuthProvider } from "./services/demoAuth";
@@ -35,6 +36,7 @@ function App() {
                 <Route path="leads/:id" element={<LeadDetailPage />} />
                 <Route path="analytics" element={<RecoveryAnalyticsPage />} />
                 <Route path="benchmark" element={<BenchmarkPage />} />
+                <Route path="evaluation" element={<DiagnosisEvaluationPage />} />
                 <Route path="scenarios" element={<ProtectedRoute requiredRole="admin"><ScenarioLabPage /></ProtectedRoute>} />
                 <Route path="appendix" element={<AppendixPage />} />
                 <Route path="rm" element={<RMPage />} />
