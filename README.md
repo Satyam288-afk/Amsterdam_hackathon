@@ -46,7 +46,7 @@ Revenue signal → explainable risk score → Gemini diagnosis → policy-bound 
 - Live analytics which update from the current demonstration run.
 - Scenario Lab for payment degradation, checkout abandonment, failed subscriptions, and mandate retry—all using the shared engine and policy.
 - 60-reply synthetic diagnosis evaluation with per-cause accuracy, source/fallback counts, and a saved reproducible report.
-- Synthetic batch benchmark calculated from nine fictional invoices; it remains clearly labelled as a small illustrative benchmark, not real merchant performance.
+- Reproducible 72-invoice synthetic batch benchmark, separate from interactive cases and clearly labelled as an assumption model—not real merchant performance.
 
 ### Access control
 
@@ -183,6 +183,7 @@ npm run build
 | `POST /api/recovery/cases/{id}/diagnose` | Gemini/fallback diagnosis, admin only |
 | `POST /api/recovery/cases/{id}/execute` | Execute an approved action, admin only |
 | `POST /api/recovery/cases/{id}/simulate-call` | Record a simulated call outcome, admin only |
+| `POST /api/recovery/demo/payment-webhook` | Validated, idempotent fictional provider-event simulator, admin only |
 | `GET /api/recovery/call-summaries` | View conversation outcomes |
 | `GET /api/recovery/scenarios` | View scenario catalog |
 | `POST /api/recovery/scenarios/{id}/activate` | Launch a scenario, admin only |

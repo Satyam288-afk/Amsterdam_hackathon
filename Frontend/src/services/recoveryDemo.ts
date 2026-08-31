@@ -130,6 +130,11 @@ export const recoveryDemo = {
       const item = fallbackCase(id); item.status = "RECOVERED"; item.recovered_amount = item.amount; item.recommended_action = "close"; item.recommended_channel = "none"; item.policy_reason = "payment confirmed"; item.timeline.push(event("Payment confirmed", `₹${item.amount.toLocaleString("en-IN")} recovered`, "payment_confirmation", "payment_link", "recovered"), event("Case recovered", "No further outreach permitted", "close", "system", "closed")); return clone(item);
     }
   },
+  async receivePaymentWebhook(id: string, amount: number): Promise<RecoveryCase> {
+    return (await apiService.api.post<RecoveryCase>("/api/recovery/demo/payment-webhook", {
+      case_id: id, provider_event_id: `evt-demo-${id}`, payment_id: `pay-demo-${id}`, amount,
+    })).data;
+  },
   async simulateResponse(id: string, responseType: "PAYMENT_CONFIRMED" | "PROMISE_TO_PAY" | "DISPUTE" | "PAYMENT_FAILED" | "NO_RESPONSE"): Promise<RecoveryCase> {
     try { return (await apiService.api.post<RecoveryCase>(`/api/recovery/cases/${id}/simulate-response`, { response_type: responseType })).data; } catch (error) {
       if (isSupabaseConfigured) throw error;

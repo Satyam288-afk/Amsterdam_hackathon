@@ -273,7 +273,7 @@ def calculate_benchmark(cases: List[Dict[str, Any]]) -> Dict[str, Any]:
         if case.get("promise_to_pay_date"):
             promises += 1
     return {
-        "label": "Synthetic benchmark",
+        "label": f"Synthetic {len(evaluated)}-invoice benchmark",
         "assumption_model": "Baseline sends one generic reminder. Sambhaash applies deterministic risk, diagnosis, approved intervention, and stop rules to fictional invoices.",
         "invoices_evaluated": len(evaluated),
         "amount_at_risk": at_risk,
@@ -287,6 +287,35 @@ def calculate_benchmark(cases: List[Dict[str, Any]]) -> Dict[str, Any]:
         "average_contacts": round(sambhaash_contacts / len(evaluated), 1) if evaluated else 0,
         "net_recovered_value": money(sambhaash_recovered - (sambhaash_contacts * 12)),
     }
+
+
+def synthetic_benchmark_cases(size: int = 72) -> List[Dict[str, Any]]:
+    """Return a fixed, reproducible fictional benchmark population.
+
+    It stays separate from interactive recovery cases, so replaying a demo case
+    cannot change the aggregate comparison shown to a judge.
+    """
+    base_cases = seeded_cases()
+    generated: List[Dict[str, Any]] = []
+    for index in range(size):
+        template = deepcopy(base_cases[index % len(base_cases)])
+        template["id"] = f"bench-{index + 1:03d}"
+        template["invoice_number"] = f"SYN-2026-{index + 1:04d}"
+        template["amount"] = money(template["amount"] + ((index * 17_500) % 110_000))
+        template["days_overdue"] = max(0, (template["days_overdue"] + index * 3) % 46)
+        template["attempts"] = index % (MAX_AUTOMATED_ATTEMPTS + 1)
+        template["status"] = "OPEN"
+        template["recovered_amount"] = 0
+        template["failed_promise"] = bool(template["previous_promise_missed"] and index % 2)
+        template["promise_to_pay_date"] = "2026-09-04" if index % 11 == 0 else None
+        template["promise_to_pay_amount"] = template["amount"] if template["promise_to_pay_date"] else None
+        template["next_action_at"] = "2026-09-04T09:00:00+00:00" if template["promise_to_pay_date"] else None
+        score, reasons = score_invoice(template)
+        template["risk_score"], template["risk_reasons"], template["risk_breakdown"] = score, reasons, score_breakdown(template)
+        policy = choose_action(template, today=date(2026, 8, 29))
+        template["recommended_action"], template["recommended_channel"], template["policy_reason"] = policy["action"], policy["channel"], policy["reason"]
+        generated.append(template)
+    return generated
 
 
 class RecoveryStore:
@@ -453,6 +482,22 @@ class RecoveryStore:
         case["timeline"].append(_event("Case recovered", "No further outreach permitted", "close", "system", "closed"))
         self._refresh_policy(case)
         return deepcopy(case)
+
+    def receive_payment_webhook(self, case_id: str, provider_event_id: str, payment_id: str, amount: int) -> Dict[str, Any]:
+        """Validate and idempotently apply a fictional provider payment event."""
+        case = self._case(case_id)
+        if money(amount) != money(case["amount"]):
+            raise ValueError("Payment amount must equal the case amount")
+        processed = case.setdefault("processed_payment_event_ids", [])
+        if provider_event_id in processed:
+            return deepcopy(case)
+        processed.append(provider_event_id)
+        case["timeline"].append(_event(
+            "Payment provider event received",
+            f"Fictional webhook {provider_event_id} validated for payment {payment_id}; amount ₹{money(amount):,}.",
+            "payment_webhook", "provider", "received",
+        ))
+        return self.confirm_payment(case_id)
 
     def simulate_response(self, case_id: str, response_type: str) -> Dict[str, Any]:
         """Apply a labelled demo response through the same recovery state rules."""

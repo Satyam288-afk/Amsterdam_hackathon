@@ -53,6 +53,9 @@ class SQLiteRecoveryStore(RecoveryStore):
     def confirm_payment(self, case_id: str) -> Dict[str, Any]:
         result = super().confirm_payment(case_id); self._persist(); return result
 
+    def receive_payment_webhook(self, case_id: str, provider_event_id: str, payment_id: str, amount: int) -> Dict[str, Any]:
+        result = super().receive_payment_webhook(case_id, provider_event_id, payment_id, amount); self._persist(); return result
+
     def simulate_response(self, case_id: str, response_type: str) -> Dict[str, Any]:
         result = super().simulate_response(case_id, response_type); self._persist(); return result
 

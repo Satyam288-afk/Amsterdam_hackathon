@@ -1,6 +1,6 @@
 from datetime import date
 
-from services.recovery.engine import RecoveryStore, calculate_benchmark, score_breakdown, score_invoice
+from services.recovery.engine import RecoveryStore, calculate_benchmark, score_breakdown, score_invoice, synthetic_benchmark_cases
 from services.recovery.evaluation import synthetic_corpus
 from services.recovery.persistence import SQLiteRecoveryStore
 
@@ -45,6 +45,14 @@ def test_repeated_payment_confirmation_is_idempotent():
     second = store.confirm_payment("rec-001")
     assert second["recovered_amount"] == 84_500
     assert len(second["timeline"]) == len(first["timeline"])
+
+
+def test_payment_webhook_is_validated_and_idempotent():
+    store = RecoveryStore()
+    paid = store.receive_payment_webhook("rec-001", "evt-demo-001", "pay-demo-001", 84_500)
+    replayed = store.receive_payment_webhook("rec-001", "evt-demo-001", "pay-demo-001", 84_500)
+    assert paid["status"] == "RECOVERED"
+    assert len(replayed["timeline"]) == len(paid["timeline"])
 
 
 def test_reset_restores_the_replayable_demo_dataset():
@@ -137,6 +145,14 @@ def test_benchmark_is_calculated_from_seeded_records():
     assert benchmark["sambhaash_recovered"] == 799_500
     assert benchmark["improvement"] == 525_500
     assert benchmark["net_recovered_value"] < benchmark["sambhaash_recovered"]
+
+
+def test_expanded_benchmark_is_reproducible_and_separate_from_demo_cases():
+    batch = synthetic_benchmark_cases()
+    assert len(batch) == 72
+    assert batch[0]["id"] == "bench-001"
+    assert batch[-1]["id"] == "bench-072"
+    assert calculate_benchmark(batch)["invoices_evaluated"] == 72
 
 
 def test_ai_diagnosis_is_bounded_and_recomputes_deterministic_policy():

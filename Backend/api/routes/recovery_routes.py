@@ -10,7 +10,7 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from services.recovery.engine import calculate_benchmark
+from services.recovery.engine import calculate_benchmark, synthetic_benchmark_cases
 from services.recovery.diagnosis import diagnose_customer_reply
 from services.recovery.persistence import SQLiteRecoveryStore
 from services.recovery.evaluation import load_evaluation, run_diagnosis_evaluation, save_evaluation
@@ -32,6 +32,13 @@ class SimulatedResponseRequest(BaseModel):
 
 class DiagnosisRequest(BaseModel):
     customer_text: str = Field(..., min_length=3, max_length=2000)
+
+
+class DemoPaymentWebhookRequest(BaseModel):
+    case_id: str = Field(..., min_length=3, max_length=100)
+    provider_event_id: str = Field(..., min_length=6, max_length=120)
+    payment_id: str = Field(..., min_length=3, max_length=120)
+    amount: int = Field(..., gt=0)
 
 
 @router.get("/summary")
@@ -110,9 +117,23 @@ async def record_promise_to_pay(case_id: str, payload: PromiseRequest):
 @router.post("/cases/{case_id}/payment-confirmed", dependencies=[Depends(require_recovery_admin)])
 async def confirm_payment(case_id: str):
     try:
-        return store.confirm_payment(case_id)
+        case = store.get_case(case_id)
+        if not case:
+            raise KeyError(case_id)
+        return store.receive_payment_webhook(case_id, f"evt-ui-{case_id}", f"pay-ui-{case_id}", case["amount"])
     except KeyError:
         raise HTTPException(status_code=404, detail="Recovery case not found")
+
+
+@router.post("/demo/payment-webhook", dependencies=[Depends(require_recovery_admin)])
+async def receive_demo_payment_webhook(payload: DemoPaymentWebhookRequest):
+    """Webhook-style, validated and idempotent payment event for the demo."""
+    try:
+        return store.receive_payment_webhook(payload.case_id, payload.provider_event_id, payload.payment_id, payload.amount)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Recovery case not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
 
 
 @router.post("/cases/{case_id}/simulate-response", dependencies=[Depends(require_recovery_admin)])
@@ -146,7 +167,7 @@ async def advance_failed_promises(as_of: str = "2026-09-05"):
 
 @router.get("/benchmark")
 async def recovery_benchmark():
-    return calculate_benchmark(store.list_cases())
+    return calculate_benchmark(synthetic_benchmark_cases())
 
 
 @router.get("/evaluation")
