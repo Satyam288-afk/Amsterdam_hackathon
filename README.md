@@ -1,80 +1,81 @@
-# Sambhaash Recovery — AI Revenue Recovery
+# Sambhaash Recovery
 
-> Detect revenue at risk → diagnose the cause → choose a bounded action → recover or escalate → prove the outcome.
+> A bounded AI workflow for finding revenue at risk, understanding customer replies, selecting a safe recovery action, and proving the outcome.
 
-Sambhaash Recovery is a demo-ready revenue-recovery agent built for Track 03. It focuses on the full decision loop rather than a dashboard of unconnected features: an explainable risk score creates a policy-bound recovery case, a simulated multilingual conversation produces a customer outcome, and the resulting recovery, stop rule, escalation, audit trail, Conversations entry, and analytics update from the same stateful workflow.
+Sambhaash Recovery is a full-stack B2B revenue-recovery product. AI understands unstructured customer language; deterministic policy controls actions that affect money, customer outreach, and escalation.
 
-## What is actually implemented
+```text
+Revenue signal → explainable risk score → Gemini diagnosis → policy-bound action
+→ customer outcome → stop / escalate → audit trail + conversations + analytics
+```
 
-- Stateful FastAPI recovery engine with deterministic scoring and policy rules.
-- B2B receivables flagship flow: approved outreach, promise-to-pay, payment confirmation, dispute escalation, and stopping rules.
-- Browser-based Hinglish recovery dialer with a clearly labelled simulated transcript. It never places a real call.
-- Conversations page populated by simulated-call outcomes.
-- Live analytics that reflect the current demo run, separate from the synthetic batch benchmark.
-- Scenario Lab for checkout abandonment, failed subscriptions, and mandate-retry recovery. Each launches a real case in the same engine.
-- Role-aware demo access: administrators can operate the demo; recovery analysts have a read-only audit view.
-- Bounded AI diagnosis: free-form customer replies are classified into a validated cause and confidence, while deterministic policy still owns every action.
-- Resettable fictional demo data, backend policy tests, and a production frontend build.
+## Engineering and features
 
-## 60-second judge demo
+### Recovery engine
 
-1. Sign in as **Admin** and open **Dashboard → Run golden demo** for Aarav Mehta (₹84,500 at risk).
-2. Show the risk-score breakdown, diagnosis, and approved action.
-3. Open the recovery dialer and select **“Payment complete ho gaya”**.
-4. Show the case is `RECOVERED`, recovered revenue is ₹84,500, and further outreach is stopped.
-5. Open **Conversations** to show the saved call outcome and next action.
-6. Open **Analytics** to show the same live recovered amount.
-7. Optionally open **Scenario Lab** to launch checkout, subscription, or mandate-retry cases through the same engine.
+- Stateful FastAPI recovery engine for B2B invoices and payment journeys.
+- Deterministic, explainable risk score capped at 100.
+- Policy engine that selects approved actions and cannot be overridden by AI.
+- Idempotent payment and promise-to-pay handlers: replayed events do not double-count money or duplicate audit records.
+- Resettable fictional-data adapter for a reliable demonstration.
 
-## Demo access and roles
+### Bounded AI diagnosis
 
-The local demo starts at `/login`. These accounts exist only in the browser-local demo adapter:
+- Gemini structured classification for free-form customer replies.
+- Validated output: `cause`, `confidence`, `reasoning`, and `source` only.
+- Gemini cannot recommend, execute, or bypass a recovery action.
+- Transparent deterministic fallback when Gemini is disabled or unavailable.
+- Each diagnosis is added to the audit timeline, then the deterministic risk and policy engine recalculates the intervention.
 
-| Role | Sign-in | What it can do |
-|---|---|---|
-| Administrator | `admin@sambhaash.demo` / `Admin@123` | Launch scenarios, reset the demo, and execute/simulate recovery actions. |
-| Recovery analyst | `user@sambhaash.demo` / `User@123` | View cases, score explanations, timelines, Conversations, and analytics. Operational controls are disabled. |
+### Recovery controls
 
-This makes the approval boundary visible during a demo. It is **not production authentication**: the session is stored in local browser storage and is deliberately labelled as demo access. The production implementation below enforces the same boundary using Supabase JWTs and backend authorization.
+- Maximum automated attempts: **3**.
+- Maximum voice calls per day: **1**.
+- Automated outreach stops after payment, opt-out, or a valid promise-to-pay.
+- Disputes, failed promises, repeated failures, and high-value cases route to human escalation.
+- Exact approved message and safeguard are visible before an action is executed.
 
-## Production authentication setup
+### Product experience
 
-The project supports real email/password authentication with Supabase. In production mode, Supabase issues the session JWT; the API validates it on every recovery request; and only users whose **server-managed** `app_metadata.recovery_role` is `admin` may mutate recovery state.
+- Revenue dashboard with at-risk, recovered, open-case, promise, and escalation metrics.
+- Case view with risk breakdown, policy explanation, action preview, Gemini diagnosis, and audit timeline.
+- Hinglish recovery dialer simulation, clearly labelled; it never calls a real number.
+- Conversations page with simulated-call outcomes.
+- Live analytics which update from the current demonstration run.
+- Scenario Lab for checkout abandonment, failed subscriptions, and mandate retry—all using the shared engine and policy.
+- Synthetic batch benchmark calculated from nine fictional invoices.
 
-1. Create a Supabase project, enable Email/Password authentication, and set your deployed frontend domain as the Site URL / allowed redirect URL.
-2. Apply [20260831_role_aware_auth.sql](supabase/migrations/20260831_role_aware_auth.sql) in the Supabase SQL editor (or through the Supabase CLI). It creates a default read-only profile for each authenticated user and enables RLS on those profiles.
-3. Set deployment secrets—never commit them:
+### Access control
 
-   ```bash
-   # Frontend environment
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-anon-key
+- Browser-local demo roles for a no-credential presentation.
+- Optional Supabase email/password authentication for production use.
+- Backend JWT validation when `AUTH_REQUIRED=true`.
+- Server-enforced administrator boundary for every state-changing recovery endpoint.
+- Supabase migration for profiles and row-level security.
 
-   # Backend environment
-   SUPABASE_URL=https://your-project.supabase.co
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-   AUTH_REQUIRED=true
-   CORS_ORIGINS=https://your-frontend-domain.com
-   TRUSTED_HOSTS=your-api-domain.com
-   ```
+## Architecture
 
-4. Invite/create users in Supabase Auth. New users are recovery analysts by default. Promote only trusted operators from secure server-side tooling using the service role—never from the browser:
-
-   ```ts
-   await supabase.auth.admin.updateUserById(userId, {
-     app_metadata: { recovery_role: "admin" },
-   });
-   ```
-
-5. Deploy frontend and backend with those variables. The login screen automatically switches from demo accounts to real Supabase credentials when `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are present.
-
-`AUTH_REQUIRED=true` is the production safety switch. Without a valid Supabase JWT, recovery API reads return `401`; operational actions return `403` unless the validated `recovery_role` is `admin`. The in-memory recovery records remain demo data until the next persistence phase.
+```mermaid
+flowchart LR
+  signal[Payment, checkout, or invoice signal] --> score[Deterministic risk breakdown]
+  score --> diagnosis[Gemini structured diagnosis]
+  diagnosis --> policy[Deterministic policy engine]
+  policy --> action[Approved intervention]
+  action --> reply[Customer reply or payment event]
+  reply --> outcome{Bounded outcome}
+  outcome -->|Paid| close[Recover + stop outreach]
+  outcome -->|Promise| pause[Record promise + pause outreach]
+  outcome -->|Dispute| review[Human escalation]
+  close --> proof[Timeline, Conversations, Live Analytics]
+  pause --> proof
+  review --> proof
+```
 
 ## Explainable risk score
 
-The score is deterministic, capped at 100, and stored with its full breakdown. No LLM can override this score or the downstream policy.
+The score is field-derived, stored with its full breakdown, and never controlled by the LLM.
 
-| Contribution | Points |
+| Signal | Contribution |
 |---|---:|
 | Event severity: payment failure / checkout abandonment / invoice dispute | +20 / +10 / +25 |
 | Days overdue | `min(30, days × 1.5)` |
@@ -84,62 +85,76 @@ The score is deterministic, capped at 100, and stored with its full breakdown. N
 | Historical payment delay | +8 |
 | Low responsiveness | +8 |
 
-For example, a ₹14,900 failed subscription with no overdue days is `20` event-severity points plus `10` amount-tier points: **30/100**. The UI shows every contribution—including zero-value ones—to make the decision auditable.
+Every contribution, including zero-point signals, is shown on the case screen for auditability.
 
-## Bounded AI diagnosis
+## Demo flow
 
-An administrator can submit a free-form customer reply on a recovery case. The diagnosis service returns only a schema-validated `cause`, `confidence`, `reasoning`, and `source`; it cannot recommend, execute, or bypass an action. The resulting classification is written to the timeline and the deterministic risk/policy engine recomputes the approved intervention.
-
-By default, the service uses a transparent deterministic reply classifier for a reliable offline demo. To enable Gemini structured-output inference, configure `GOOGLE_API_KEY` and explicitly set `ENABLE_EXTERNAL_LLM_DIAGNOSIS=true`. If Gemini is unavailable, malformed, or times out, it safely falls back to the deterministic classifier and labels its source accordingly.
-
-## Policy boundaries
-
-- Maximum automated attempts: **3**
-- Maximum voice calls per day: **1**
-- Stop automated outreach after payment, opt-out, or a valid promise-to-pay
-- Escalate invoice disputes, failed promises, repeated failures, and high-value cases
-- Deterministic policy owns payment state, limits, and escalation; AI may assist with language or classification but cannot bypass rules
-
-## Architecture
-
-```mermaid
-flowchart LR
-  signal[Revenue signal] --> score[Deterministic risk breakdown]
-  score --> policy[Bounded policy engine]
-  policy --> action[Approved action]
-  action --> response[Simulated customer response]
-  response --> outcome{Outcome}
-  outcome -->|Paid| recovered[Recovered revenue + stop rule]
-  outcome -->|Promise| pause[Promise tracker + outreach paused]
-  outcome -->|Dispute| human[Human escalation]
-  recovered --> proof[Timeline + Conversations + Live Analytics]
-  pause --> proof
-  human --> proof
-```
-
-## Demo data and measurement integrity
-
-All invoice, customer, phone, call, and outcome records bundled with this project are fictional. A simulated call is explicitly labelled as such and does not claim a telephony integration.
-
-The **Live Demo Outcomes** section reflects actions taken in the current in-memory run. The **Synthetic Batch Benchmark** compares a generic-reminder baseline with the bounded workflow across the seeded nine-invoice batch. It is an assumption model calculated in code, not a claim about real merchant outcomes.
+1. Open **Dashboard** and select **Aarav Mehta** (₹84,500 at risk).
+2. Show score breakdown, cause, approved intervention, and safeguards.
+3. In **Bounded AI Diagnosis**, enter: `The payment link failed; our bank is showing a technical error.`
+4. Show `Gemini Structured Output`, its classification and explanation, and the updated policy.
+5. Open the recovery dialer and choose **Payment complete ho gaya**.
+6. Show the closed case, recovered amount, and no-more-outreach stop rule.
+7. Open **Conversations** and **Analytics** to prove the same outcome across the system.
+8. Optionally use **Scenario Lab** for checkout, subscription, or mandate-retry flows.
 
 ## Run locally
 
-Requirements: Python 3.10+ and Node.js **20.19+** (or newer).
+Requirements: Python 3.10+ and Node.js 20.19+.
 
 ```bash
-# Terminal 1: backend
+# Terminal 1
 cd Backend
 python -m pip install -r requirements.txt
 python -m uvicorn main:app --host 127.0.0.1 --port 8000
 
-# Terminal 2: frontend
+# Terminal 2
 cd Frontend
 npm install
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal, then visit `/login` and sign in as an administrator to run the full demo.
+Open the Vite URL, then visit `/login`.
+
+### Demo accounts
+
+| Role | Sign-in | Permissions |
+|---|---|---|
+| Administrator | `admin@sambhaash.demo` / `Admin@123` | Launch scenarios, reset demo, run actions, and submit AI diagnosis. |
+| Recovery analyst | `user@sambhaash.demo` / `User@123` | Read-only access to cases, timelines, Conversations, and analytics. |
+
+## Enable Gemini diagnosis
+
+Create `Backend/.env` locally. It is ignored by Git and must never be committed.
+
+```env
+GOOGLE_API_KEY=your_gemini_api_key
+ENABLE_EXTERNAL_LLM_DIAGNOSIS=true
+GEMINI_MODEL_NAME=gemini-2.5-flash
+```
+
+When configured, the UI displays `Gemini Structured Output`. Without a valid provider response, it displays the deterministic fallback source and continues safely.
+
+## Enable production authentication
+
+The project supports Supabase Auth for real email/password sessions and backend authorization.
+
+1. Create a Supabase project and enable Email/Password authentication.
+2. Apply [20260831_role_aware_auth.sql](supabase/migrations/20260831_role_aware_auth.sql).
+3. Set deployment secrets:
+
+```env
+# Frontend
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+
+# Backend
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+AUTH_REQUIRED=true
+```
+
+Roles come only from server-managed `app_metadata.recovery_role`. Administrators may mutate recovery workflows; authenticated users are read-only by default.
 
 ## Verify
 
@@ -153,16 +168,24 @@ cd ../Frontend
 npm run build
 ```
 
-## Demo API surface
+## API
 
-- `GET /api/recovery/summary` — live demo metrics
-- `GET /api/recovery/cases` — recovery cases
-- `POST /api/recovery/cases/{id}/execute` — approved action
-- `POST /api/recovery/cases/{id}/simulate-call` — simulated call outcome + Conversations record
-- `GET /api/recovery/call-summaries` — simulated call records
-- `GET /api/recovery/scenarios` and `POST /api/recovery/scenarios/{id}/activate` — Scenario Lab
-- `POST /api/recovery/demo/reset` — reset only the fictional in-memory dataset
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/recovery/cases` | List recovery cases |
+| `GET /api/recovery/cases/{id}` | View a recovery case |
+| `POST /api/recovery/cases/{id}/diagnose` | Gemini/fallback diagnosis, admin only |
+| `POST /api/recovery/cases/{id}/execute` | Execute an approved action, admin only |
+| `POST /api/recovery/cases/{id}/simulate-call` | Record a simulated call outcome, admin only |
+| `GET /api/recovery/call-summaries` | View conversation outcomes |
+| `GET /api/recovery/scenarios` | View scenario catalog |
+| `POST /api/recovery/scenarios/{id}/activate` | Launch a scenario, admin only |
+| `POST /api/recovery/demo/reset` | Reset fictional demo records, admin only |
 
-## Production path
+## Scope and integrity
 
-The current recovery adapter is intentionally in-memory for a reliable no-credential demo. It now has an optional production authentication path using Supabase JWTs, server-side role checks, and RLS-protected user profiles. A complete production implementation would additionally persist cases and audit events, apply RLS to recovery data, receive verified payment webhooks, use consented communication channels, and retain only the minimum required customer data.
+- All bundled invoices, customer names, phone numbers, calls, and outcomes are fictional.
+- The dialer is an in-browser simulation; no real number is called.
+- Gemini diagnosis is real when configured, but it is limited to structured classification.
+- The benchmark is a reproducible synthetic assumption model, not a claim about real merchant performance.
+- The current recovery store is in memory. Production should persist cases and audit events, enforce row-level access to recovery data, consume verified payment webhooks, and use consented communication channels.
