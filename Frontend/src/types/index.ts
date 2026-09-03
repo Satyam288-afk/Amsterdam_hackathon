@@ -1,5 +1,5 @@
 /**
- * Core Types for Sambhaash AI Admin Dashboard
+ * Core Types for DuesPilot Admin Dashboard
  * Aligned with Backend Schema
  */
 

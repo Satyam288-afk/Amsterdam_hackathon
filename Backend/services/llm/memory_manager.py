@@ -180,7 +180,7 @@ class LeadMemory:
 
 class MemoryManager:
     """
-    Memory layer for Sambhaash AI.
+    Memory layer for DuesPilot.
 
     Responsibilities:
     - preserve short-term call context

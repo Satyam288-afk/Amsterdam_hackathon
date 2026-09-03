@@ -12,9 +12,9 @@ export const Footer: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <span className="p-1 rounded-lg bg-[#d4a373]/10 flex items-center justify-center">
-              <img src="/logo.png" className="w-8 h-8 object-contain" alt="Sambhaash AI" />
+              <img src="/logo.png" className="w-8 h-8 object-contain" alt="DuesPilot" />
             </span>
-            <span className="text-xl font-black text-[#2d1e18] font-display">Sambhaash AI</span>
+            <span className="text-xl font-black text-[#2d1e18] font-display">DuesPilot</span>
           </div>
           <p className="text-xs font-semibold text-[#3d2b1f]/70 leading-relaxed">
             Premium multilingual outbound telephony & conversational messaging platform. Powered by state-of-the-art regional voice AI.
@@ -76,10 +76,10 @@ export const Footer: React.FC = () => {
 
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-[#3d2b1f]/60">
-        <p>© 2026 Sambhaash AI. Built for Team Batmans. All rights reserved.</p>
+        <p>© 2026 DuesPilot. Built for Team Batmans. All rights reserved.</p>
         <div className="flex items-center gap-4">
           <a 
-            href="https://github.com/Rahul-8283/Sambhaash_AI" 
+            href="https://github.com/Satyam288-afk/Amsterdam_hackathon"
             target="_blank" 
             rel="noopener noreferrer" 
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-[#3d2b1f]/15 bg-white/40 hover:bg-[#d4a373] hover:border-[#d4a373] text-[#3d2b1f]/80 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-95 cursor-pointer font-bold"

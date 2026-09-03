@@ -46,7 +46,7 @@ class PromptBuilder:
 
     def __init__(
         self,
-        assistant_name: str = "Sambhaash AI",
+        assistant_name: str = "DuesPilot",
         product_name: str = "Rupeezy Partner Program",
         brand_name: str = "Rupeezy",
         max_recent_turns: int = 6,
@@ -446,7 +446,7 @@ Follow these rules:
             if isinstance(turn, str):
                 lines.append(turn)
             elif isinstance(turn, dict):
-                # Handle custom Sambhaash format (user/ai keys)
+                # Handle custom DuesPilot format (user/ai keys)
                 if "user" in turn:
                     lines.append(f"USER: {turn['user']}")
                 if "ai" in turn:

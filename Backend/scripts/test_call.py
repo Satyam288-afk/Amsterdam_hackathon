@@ -44,6 +44,6 @@ async def generate_twilio_response(text: str, language: str = "en"):
         print(f"TTS Pipeline Error: {e}")
 
 if __name__ == "__main__":
-    # Test text (Hi, I am calling from Sambhash AI)
+    # Test text (Hi, I am calling from DuesPilot)
     test_text = "आज का दिन बहुत बड़ा दिन है"
     asyncio.run(generate_twilio_response(test_text, language="hi"))

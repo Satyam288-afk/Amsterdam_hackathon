@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM Models for Sambhaash AI Database
+SQLAlchemy ORM Models for DuesPilot Database
 
 Tables:
 - leads

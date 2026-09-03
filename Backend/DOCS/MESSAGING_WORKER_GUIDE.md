@@ -195,14 +195,14 @@ This will:
 Create /etc/systemd/system/sambhaash-worker.service:
 
 [Unit]
-Description=Sambhaash AI Background Worker
+Description=DuesPilot Background Worker
 After=redis.service
 
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu/Sambhaash_AI/Backend
-ExecStart=/usr/bin/python3 /home/ubuntu/Sambhaash_AI/Backend/run_worker.py
+WorkingDirectory=/home/ubuntu/Amsterdam_hackathon/Backend
+ExecStart=/usr/bin/python3 /home/ubuntu/Amsterdam_hackathon/Backend/run_worker.py
 Restart=always
 RestartSec=10
 

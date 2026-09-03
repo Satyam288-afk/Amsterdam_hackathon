@@ -47,7 +47,7 @@
    ↓
 5. Customer Answers
    ├─ /api/webhook/twilio/voice triggered
-   ├─ AI greets: "Hello, welcome to Sambhaash AI"
+   ├─ AI greets: "Hello, welcome to DuesPilot"
    ├─ Records speech
    ↓
 6. Customer Speaks (Turn 1)
@@ -107,7 +107,7 @@ python run_worker.py
 This will print:
 ```
 ========================================================================
-🚀 Sambhaash AI Background Worker (Call Initiator + Job Processor)
+🚀 DuesPilot Background Worker (Call Initiator + Job Processor)
 ========================================================================
 🚀 Call Initiator Scheduler started (poll_interval=30s)
 🚀 Worker started for SEND_WHATSAPP

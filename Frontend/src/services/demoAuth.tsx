@@ -22,14 +22,21 @@ const STORAGE_KEY = "sambhaash_demo_session";
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const DEMO_ACCOUNTS = [
-  { id: "demo-admin", name: "Sambhaash Admin", email: "admin@sambhaash.demo", password: "Admin@123", role: "admin" as const },
-  { id: "demo-user", name: "Recovery Analyst", email: "user@sambhaash.demo", password: "User@123", role: "user" as const },
+  { id: "demo-admin", name: "DuesPilot Admin", email: "admin@duespilot.demo", password: "Admin@123", role: "admin" as const },
+  { id: "demo-user", name: "Recovery Analyst", email: "user@duespilot.demo", password: "User@123", role: "user" as const },
 ];
 
 function readSession(): DemoUser | null {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) as DemoUser : null;
+    if (!saved) return null;
+    const session = JSON.parse(saved) as DemoUser;
+    // Keep existing browser sessions through the product rename.
+    if (session.id === "demo-admin") session.name = "DuesPilot Admin";
+    if (session.id === "demo-admin" || session.id === "demo-user") {
+      session.email = session.email.replace("@sambhaash.demo", "@duespilot.demo");
+    }
+    return session;
   } catch {
     return null;
   }
@@ -70,7 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(fromSupabaseUser(data.user));
         return;
       }
-      const account = DEMO_ACCOUNTS.find((candidate) => candidate.email === email.trim().toLowerCase() && candidate.password === password);
+      const normalizedEmail = email.trim().toLowerCase().replace("@sambhaash.demo", "@duespilot.demo");
+      const account = DEMO_ACCOUNTS.find((candidate) => candidate.email === normalizedEmail && candidate.password === password);
       if (!account) throw new Error("Use one of the demo accounts shown below.");
       const session: DemoUser = { id: account.id, name: account.name, email: account.email, role: account.role };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(session));

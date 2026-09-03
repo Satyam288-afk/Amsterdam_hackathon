@@ -20,7 +20,7 @@ from services.database.models import Base
 async def init_database():
     """Initialize database by creating all tables"""
     
-    print("🔧 Initializing Sambhaash AI Database...")
+    print("🔧 Initializing DuesPilot Database...")
     
     # Get database URL and convert if needed
     database_url = settings.database_url
@@ -101,7 +101,7 @@ async def init_database():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("SAMBHAASH AI - DATABASE INITIALIZATION")
+    print("DUESPILOT - DATABASE INITIALIZATION")
     print("=" * 60)
     
     success = asyncio.run(init_database())

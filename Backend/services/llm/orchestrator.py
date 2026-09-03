@@ -80,7 +80,7 @@ class OrchestrationResult:
 
 class Orchestrator:
     """
-    Core brain of Sambhaash AI.
+    Core brain of DuesPilot.
 
     Responsibilities:
     - load/update lead memory

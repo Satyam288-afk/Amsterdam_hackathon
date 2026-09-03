@@ -49,7 +49,7 @@ class ObjectionResponsePlan:
 
 class ObjectionHandler:
     """
-    Context-aware objection handling for Sambhaash AI.
+    Context-aware objection handling for DuesPilot.
 
     This module stays within the original plan:
     - detects the objection type passed in from intent_detector.py / orchestrator.py

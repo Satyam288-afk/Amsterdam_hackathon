@@ -170,14 +170,14 @@ export const LandingPage: React.FC = () => {
             </div>
             <h2 className="text-4xl md:text-6xl font-black text-[#3d2b1f] font-display leading-[1.1] relative z-10">
               Why We Built <br/>
-              <span className="bg-gradient-to-r from-[#b5835a] to-[#d4a373] bg-clip-text text-transparent">Sambhaash AI</span>
+              <span className="bg-gradient-to-r from-[#b5835a] to-[#d4a373] bg-clip-text text-transparent">DuesPilot</span>
             </h2>
             <div className="space-y-6 relative z-10">
               <p className="text-lg text-[#3d2b1f]/80 leading-relaxed font-sans">
                 B2B receivables slip through when a generic reminder cannot reach the right decision-maker in a language they are comfortable using. Manual follow-up is costly, inconsistent, and difficult to audit.
               </p>
               <p className="text-lg text-[#3d2b1f]/80 leading-relaxed font-sans">
-                Sambhaash AI detects revenue at risk, diagnoses a bounded payment cause, chooses an approved intervention, and records promises or payment confirmation. Sarvam voice, Whisper, Groq, RAG, Twilio, and WhatsApp remain reusable recovery channels—not the product outcome itself.
+                DuesPilot detects revenue at risk, diagnoses a bounded payment cause, chooses an approved intervention, and records promises or payment confirmation. Sarvam voice, Whisper, Groq, RAG, Twilio, and WhatsApp remain reusable recovery channels—not the product outcome itself.
               </p>
             </div>
           </motion.div>

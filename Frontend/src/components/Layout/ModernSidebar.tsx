@@ -73,7 +73,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ isOpen, onToggle }) => {
             <img 
               src="/logo.png" 
               className="w-10 h-10 object-contain shrink-0 group-hover:scale-105 transition-transform duration-200" 
-              alt="Sambhaash logo" 
+              alt="DuesPilot logo"
             />
             <AnimatePresence mode="wait">
               {isOpen && (
@@ -84,7 +84,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ isOpen, onToggle }) => {
                   transition={{ duration: 0.2 }}
                   className="font-bold text-2xl text-[#2d1e18] whitespace-nowrap tracking-tight font-display"
                 >
-                  Sambhaash Recover
+                  DuesPilot
                 </motion.span>
               )}
             </AnimatePresence>

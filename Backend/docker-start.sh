@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Docker Quick Start Script - Sambhaash AI Backend
+# Docker Quick Start Script - DuesPilot Backend
 # Usage: bash docker-start.sh
 
 set -e
 
-echo "🐳 Sambhaash AI - Docker Setup"
+echo "🐳 DuesPilot - Docker Setup"
 echo "=============================="
 
 # Check if Docker is installed

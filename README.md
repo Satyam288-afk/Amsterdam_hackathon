@@ -1,8 +1,15 @@
-# Sambhaash Recovery
+# DuesPilot
+
+Product branding is now DuesPilot. Existing browser storage keys, deployment
+resource names, and the `sambhaash_recovered` API field are retained for backward
+compatibility; the interface uses DuesPilot throughout. Previous demo email
+aliases still work. The GitHub repository remains `Amsterdam_hackathon`.
+
+Built on the original [Sambhaash AI repository](https://github.com/Rahul-8283/Sambhaash_AI), extended here into a bounded revenue-recovery demo.
 
 > A bounded AI workflow for finding revenue at risk, understanding customer replies, selecting a safe recovery action, and proving the outcome.
 
-Sambhaash Recovery is a full-stack B2B revenue-recovery product. AI understands unstructured customer language; deterministic policy controls actions that affect money, customer outreach, and escalation.
+DuesPilot is a full-stack B2B revenue-recovery product. AI understands unstructured customer language; deterministic policy controls actions that affect money, customer outreach, and escalation.
 
 ```text
 Revenue signal → explainable risk score → Gemini diagnosis → policy-bound action
@@ -124,8 +131,8 @@ Open the Vite URL, then visit `/login`.
 
 | Role | Sign-in | Permissions |
 |---|---|---|
-| Administrator | `admin@sambhaash.demo` / `Admin@123` | Launch scenarios, reset demo, run actions, and submit AI diagnosis. |
-| Recovery analyst | `user@sambhaash.demo` / `User@123` | Read-only access to cases, timelines, Conversations, and analytics. |
+| Administrator | `admin@duespilot.demo` / `Admin@123` | Launch scenarios, reset demo, run actions, and submit AI diagnosis. |
+| Recovery analyst | `user@duespilot.demo` / `User@123` | Read-only access to cases, timelines, Conversations, and analytics. |
 
 ## Enable Gemini diagnosis
 

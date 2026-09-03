@@ -1,4 +1,4 @@
-# 🧠 Sambhaash AI - Backend Architecture
+# 🧠 DuesPilot - Backend Architecture
 
 ## 📁 Project Structure
 
@@ -312,9 +312,9 @@ DEBUG=true
 
 
 
-# Sambhaash AI Backend (Person 1 Runbook)
+# DuesPilot Backend (Person 1 Runbook)
 
-This guide documents the **Person 1 (Telephony + STT)** workflow for Sambhaash AI.
+This guide documents the **Person 1 (Telephony + STT)** workflow for DuesPilot.
 
 Current implementation focus:
 - Twilio Voice webhook (record-and-process flow)
@@ -375,7 +375,7 @@ Suggested next integration for Person 2:
 
 ## 3) Local setup
 
-Run from repo root (`.\Sambhaash_AI`).
+Run from repo root (`.\Amsterdam_hackathon`).
 
 ```powershell
 python -m pip install -r .\Backend\requirements.txt
@@ -470,7 +470,7 @@ You already joined sandbox (good ✅).
    - Method: `HTTP POST`
 3. From your WhatsApp, send a test message to sandbox number (`+14155238886`).
 4. You should receive auto XML-driven response:
-   - “Thanks for messaging Sambhaash AI...”
+   - “Thanks for messaging DuesPilot...”
 
 ---
 

@@ -1,8 +1,8 @@
-# Sambhaash Recovery — Track 03 Submission Pack
+# DuesPilot — Track 03 Submission Pack
 
 ## One-line pitch
 
-Sambhaash Recovery detects revenue at risk, chooses a policy-bound recovery intervention, and proves the outcome with stopping rules, an audit trail, Conversations records, and live demo analytics.
+DuesPilot detects revenue at risk, chooses a policy-bound recovery intervention, and proves the outcome with stopping rules, an audit trail, Conversations records, and live demo analytics.
 
 ## Problem
 

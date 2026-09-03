@@ -1,12 +1,12 @@
 @echo off
-REM Docker Quick Start Script - Sambhaash AI Backend (Windows)
+REM Docker Quick Start Script - DuesPilot Backend (Windows)
 REM Usage: docker-start.bat
 
 setlocal enabledelayedexpansion
 
 echo.
 echo ============================================================
-echo Sambhaash AI - Docker Setup (Windows)
+echo DuesPilot - Docker Setup (Windows)
 echo ============================================================
 echo.
 

@@ -25,7 +25,7 @@ def pitch_node(state: AgentState) -> Dict[str, Any]:
     """
     Standard pitch node.
     """
-    system_prompt = SystemMessage(content="You are Sambhaash AI, an expert sales agent. Pitch the product naturally and persuasively based on previous context.")
+    system_prompt = SystemMessage(content="You are DuesPilot, an expert sales agent. Pitch the product naturally and persuasively based on previous context.")
     
     response = llm.invoke([system_prompt] + state["messages"])
     
@@ -38,7 +38,7 @@ def rag_node(state: AgentState) -> Dict[str, Any]:
     kb_content = state.get("kb_context", "")
     
     prompt_text = (
-        "You are Sambhaash AI. The user asked a specific question. "
+        "You are DuesPilot. The user asked a specific question. "
         "Answer it concisely based ONLY on the following knowledge base context:\n\n"
         f"{kb_content}"
     )
@@ -53,7 +53,7 @@ def objection_handler_node(state: AgentState) -> Dict[str, Any]:
     """
     Handles objections raised by the user.
     """
-    system_prompt = SystemMessage(content="You are Sambhaash AI. The user has raised an objection. Handle it with empathy and provide a strong counter-value proposition.")
+    system_prompt = SystemMessage(content="You are DuesPilot. The user has raised an objection. Handle it with empathy and provide a strong counter-value proposition.")
     
     objections = state.get("detected_objections", [])
     objections.append(state["messages"][-1].content)

@@ -33,17 +33,17 @@ def format_inr(value: int | float) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Sambhaash's fictional recovery benchmark")
+    parser = argparse.ArgumentParser(description="Run DuesPilot's fictional recovery benchmark")
     parser.add_argument("--json", type=Path, help="Optional path to write the calculated JSON result")
     args = parser.parse_args()
     result = calculate_benchmark(RecoveryStore().list_cases())
 
-    print("Sambhaash AI — Synthetic Recovery Benchmark")
+    print("DuesPilot — Synthetic Recovery Benchmark")
     print("All figures are calculated from the bundled fictional invoice batch.")
     print(f"Invoices evaluated: {result['invoices_evaluated']}")
     print(f"Revenue at risk: {format_inr(result['amount_at_risk'])}")
     print(f"Baseline recovered: {format_inr(result['baseline_recovered'])} ({result['baseline_recovery_rate']}%)")
-    print(f"Sambhaash recovered: {format_inr(result['sambhaash_recovered'])} ({result['recovery_rate']}%)")
+    print(f"DuesPilot recovered: {format_inr(result['sambhaash_recovered'])} ({result['recovery_rate']}%)")
     print(f"Recovery uplift: {format_inr(result['improvement'])}")
     print(f"Average contacts: {result['average_contacts']}")
     print(f"Escalations: {result['escalations']}; promise-to-pay cases: {result['promise_to_pay_count']}")

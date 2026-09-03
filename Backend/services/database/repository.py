@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class Repository:
     """
-    Data access layer for Sambhaash AI.
+    Data access layer for DuesPilot.
     
     All operations are async and use raw SQL queries with asyncpg.
     No ORM object mapping - returns plain dictionaries.

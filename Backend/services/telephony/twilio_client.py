@@ -80,7 +80,7 @@ class TwilioClient:
 
 	def build_voice_entry_twiml(
 		self,
-		greeting_text: str = "Hello from Sambhaash AI. Please speak after the beep.",
+		greeting_text: str = "Hello from DuesPilot. Please speak after the beep.",
 		recording_callback_path: str = "/api/webhook/twilio/recording",
 		timeout_seconds: int = 60,
 	) -> str:

@@ -1,4 +1,4 @@
--- Sambhaash Recovery: production user profile and role foundation.
+-- DuesPilot: production user profile and role foundation.
 -- Run in the Supabase SQL editor or through the Supabase CLI before enabling
 -- AUTH_REQUIRED=true on the API.
 

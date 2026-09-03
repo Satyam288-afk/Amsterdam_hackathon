@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-blue-600">Sambhaash</h1>
+          <h1 className="text-2xl font-bold text-blue-600">DuesPilot</h1>
           <button
             onClick={onToggle}
             aria-label="Close sidebar"

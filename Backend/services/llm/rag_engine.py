@@ -121,7 +121,7 @@ class EmbedderProtocol(Protocol):
 
 class RAGEngine:
     """
-    Retrieval-Augmented Generation engine for Sambhaash AI.
+    Retrieval-Augmented Generation engine for DuesPilot.
 
     Responsibilities:
     - ingest knowledge chunks into the vector DB

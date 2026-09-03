@@ -53,7 +53,7 @@ async def main():
     logger = logging.getLogger(__name__)
     
     logger.info("=" * 80)
-    logger.info("[WORKER] Sambhaash AI Background Worker (Call Initiator + Job Processor)")
+    logger.info("[WORKER] DuesPilot Background Worker (Call Initiator + Job Processor)")
     logger.info("[WORKER] Note: Ngrok tunnel is managed by backend (Terminal 1)")
     logger.info("=" * 80)
     

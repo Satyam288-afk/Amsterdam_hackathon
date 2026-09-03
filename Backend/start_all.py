@@ -3,7 +3,7 @@ import sys
 import time
 import os
 
-print("[START] Booting up Sambhaash AI services...")
+print("[START] Booting up DuesPilot services...")
 
 # Start background worker process
 print("[START] Starting Background Worker Process...")

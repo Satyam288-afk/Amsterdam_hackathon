@@ -69,7 +69,7 @@ class ConversationContext:
 
 class StateMachine:
     """
-    Conversation flow controller for Sambhaash AI.
+    Conversation flow controller for DuesPilot.
 
     This file intentionally owns only stage transitions and flow control.
     It does not handle STT, prompt building, scoring math, DB writes,

@@ -59,7 +59,7 @@ export const MainLayout: FC<MainLayoutProps> = ({ children }) => {
               </button>
             )}
             <div className="truncate">
-              <h2 className="text-xs font-semibold text-[#3d2b1f]/60 uppercase tracking-wider truncate">Sambhaash AI Revenue Recovery</h2>
+              <h2 className="text-xs font-semibold text-[#3d2b1f]/60 uppercase tracking-wider truncate">DuesPilot Revenue Recovery</h2>
               <p className="text-lg md:text-xl font-extrabold text-[#2d1e18] font-display truncate">Bounded Receivables Workflow</p>
             </div>
           </div>

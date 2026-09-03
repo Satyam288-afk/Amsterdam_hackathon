@@ -43,7 +43,7 @@ async def send_whatsapp_message(payload: OutboundCallRequest):
 	client = TwilioClient()
 	response = client.send_whatsapp_message(
 		to_number=payload.phone_number,
-		body="Hello from Sambhaash AI. Thanks for connecting with us.",
+		body="Hello from DuesPilot. Thanks for connecting with us.",
 	)
 	return {
 		"sid": response.get("sid"),

@@ -232,7 +232,7 @@ async def voice_webhook(request: Request) -> Response:
                 callback_path += f"?session_id={session_id}&lead_id={lead_id}"
                 
         twiml = client.build_voice_entry_twiml(
-                greeting_text="Hello, welcome to Sambhaash AI. Please speak after the beep.",
+                greeting_text="Hello, welcome to DuesPilot. Please speak after the beep.",
                 recording_callback_path=callback_path,
         )
         return Response(content=twiml, media_type="application/xml")

@@ -1,5 +1,5 @@
 """
-Sambhaash AI - Main FastAPI Application
+DuesPilot - Main FastAPI Application
 Entry point for the backend server
 """
 
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events.
     """
     # STARTUP
-    logger.info("[APP] Starting Sambhaash AI Backend...")
+    logger.info("[APP] Starting DuesPilot Backend...")
     
     try:
         # Initialize ngrok tunnel if in development mode
@@ -57,7 +57,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # SHUTDOWN
-    logger.info("[APP] Shutting down Sambhaash AI Backend...")
+    logger.info("[APP] Shutting down DuesPilot Backend...")
     try:
         await close_db_client()
         logger.info("[APP] Database connection closed")
@@ -74,7 +74,7 @@ def create_app() -> FastAPI:
     config = get_config()
     
     app = FastAPI(
-        title="Sambhaash AI Revenue Recovery",
+        title="DuesPilot Revenue Recovery",
         description="Bounded multilingual recovery workflows for overdue B2B receivables",
         version="1.0.0",
         lifespan=lifespan
@@ -108,7 +108,7 @@ def create_app() -> FastAPI:
         """Health check endpoint"""
         return {
             "status": "healthy",
-            "service": "Sambhaash AI Backend",
+            "service": "DuesPilot Backend",
             "version": "1.0.0"
         }
     
@@ -131,7 +131,7 @@ def create_app() -> FastAPI:
     async def root():
         """Root endpoint with API info"""
         return {
-            "name": "Sambhaash AI",
+            "name": "DuesPilot",
             "description": "AI receivables recovery agent for overdue B2B invoices",
             "version": "1.0.0",
             "docs": "/docs",

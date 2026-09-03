@@ -246,7 +246,7 @@ def seeded_cases() -> List[Dict[str, Any]]:
 def calculate_benchmark(cases: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Reproducible synthetic benchmark with explicitly encoded assumptions.
 
-    Baseline assumes one generic reminder. Sambhaash assumes the bounded policy
+    Baseline assumes one generic reminder. DuesPilot assumes the bounded policy
     reaches a recoverable case when it is neither disputed nor unreachable.
     Amounts are calculated from the same seeded records, never hard-coded UI text.
     """
@@ -274,7 +274,7 @@ def calculate_benchmark(cases: List[Dict[str, Any]]) -> Dict[str, Any]:
             promises += 1
     return {
         "label": f"Synthetic {len(evaluated)}-invoice benchmark",
-        "assumption_model": "Baseline sends one generic reminder. Sambhaash applies deterministic risk, diagnosis, approved intervention, and stop rules to fictional invoices.",
+        "assumption_model": "Baseline sends one generic reminder. DuesPilot applies deterministic risk, diagnosis, approved intervention, and stop rules to fictional invoices.",
         "invoices_evaluated": len(evaluated),
         "amount_at_risk": at_risk,
         "baseline_recovered": baseline_recovered,
