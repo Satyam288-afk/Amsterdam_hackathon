@@ -375,7 +375,7 @@ Suggested next integration for Person 2:
 
 ## 3) Local setup
 
-Run from repo root (`.\Amsterdam_hackathon`).
+Run from repo root (`.\razorpay_hackathon`).
 
 ```powershell
 python -m pip install -r .\Backend\requirements.txt

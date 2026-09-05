@@ -3,7 +3,7 @@
 Product branding is now DuesPilot. Existing browser storage keys, deployment
 resource names, and the `sambhaash_recovered` API field are retained for backward
 compatibility; the interface uses DuesPilot throughout. Previous demo email
-aliases still work. The GitHub repository remains `Amsterdam_hackathon`.
+aliases still work. The GitHub repository is `razorpay_hackathon`.
 
 Built on the original [Sambhaash AI repository](https://github.com/Rahul-8283/Sambhaash_AI), extended here into a bounded revenue-recovery demo.
 

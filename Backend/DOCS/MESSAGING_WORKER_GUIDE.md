@@ -201,8 +201,8 @@ After=redis.service
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu/Amsterdam_hackathon/Backend
-ExecStart=/usr/bin/python3 /home/ubuntu/Amsterdam_hackathon/Backend/run_worker.py
+WorkingDirectory=/home/ubuntu/razorpay_hackathon/Backend
+ExecStart=/usr/bin/python3 /home/ubuntu/razorpay_hackathon/Backend/run_worker.py
 Restart=always
 RestartSec=10
 

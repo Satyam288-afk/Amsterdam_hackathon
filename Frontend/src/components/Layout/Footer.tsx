@@ -79,7 +79,7 @@ export const Footer: React.FC = () => {
         <p>© 2026 DuesPilot. Built for Team Batmans. All rights reserved.</p>
         <div className="flex items-center gap-4">
           <a 
-            href="https://github.com/Satyam288-afk/Amsterdam_hackathon"
+            href="https://github.com/Satyam288-afk/razorpay_hackathon"
             target="_blank" 
             rel="noopener noreferrer" 
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-[#3d2b1f]/15 bg-white/40 hover:bg-[#d4a373] hover:border-[#d4a373] text-[#3d2b1f]/80 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-95 cursor-pointer font-bold"
