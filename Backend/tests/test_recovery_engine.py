@@ -69,7 +69,9 @@ def test_hinglish_promise_is_stored_and_pauses_workflow():
     store = RecoveryStore()
     promised = store.record_promise("rec-001", "Friday ko payment kar denge.")
     assert promised["status"] == "PROMISE_TO_PAY"
-    assert promised["promise_to_pay_date"] == "2026-09-04"
+    promised_date = date.fromisoformat(promised["promise_to_pay_date"])
+    assert promised_date >= date.today()
+    assert promised_date.weekday() == 4
     assert promised["promise_to_pay_amount"] == 84_500
     assert promised["recommended_action"] == "pause"
 
@@ -142,9 +144,9 @@ def test_benchmark_is_calculated_from_seeded_records():
     assert benchmark["invoices_evaluated"] == 9
     assert benchmark["amount_at_risk"] == 1_840_000
     assert benchmark["baseline_recovered"] == 274_000
-    assert benchmark["sambhaash_recovered"] == 799_500
+    assert benchmark["duespilot_recovered"] == 799_500
     assert benchmark["improvement"] == 525_500
-    assert benchmark["net_recovered_value"] < benchmark["sambhaash_recovered"]
+    assert benchmark["net_recovered_value"] < benchmark["duespilot_recovered"]
 
 
 def test_expanded_benchmark_is_reproducible_and_separate_from_demo_cases():

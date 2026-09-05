@@ -78,7 +78,7 @@ export interface RecoveryBenchmark {
   invoices_evaluated: number;
   amount_at_risk: number;
   baseline_recovered: number;
-  sambhaash_recovered: number;
+  duespilot_recovered: number;
   baseline_recovery_rate: number;
   recovery_rate: number;
   improvement: number;

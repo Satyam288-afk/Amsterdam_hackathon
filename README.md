@@ -1,12 +1,5 @@
 # DuesPilot
 
-Product branding is now DuesPilot. Existing browser storage keys, deployment
-resource names, and the `sambhaash_recovered` API field are retained for backward
-compatibility; the interface uses DuesPilot throughout. Previous demo email
-aliases still work. The GitHub repository is `razorpay_hackathon`.
-
-Built on the original [Sambhaash AI repository](https://github.com/Rahul-8283/Sambhaash_AI), extended here into a bounded revenue-recovery demo.
-
 > A bounded AI workflow for finding revenue at risk, understanding customer replies, selecting a safe recovery action, and proving the outcome.
 
 DuesPilot is a full-stack B2B revenue-recovery product. AI understands unstructured customer language; deterministic policy controls actions that affect money, customer outreach, and escalation.

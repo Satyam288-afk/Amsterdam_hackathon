@@ -18,7 +18,7 @@ interface AuthContextValue {
   signOut: () => void;
 }
 
-const STORAGE_KEY = "sambhaash_demo_session";
+const STORAGE_KEY = "duespilot_demo_session";
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const DEMO_ACCOUNTS = [
@@ -30,13 +30,7 @@ function readSession(): DemoUser | null {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return null;
-    const session = JSON.parse(saved) as DemoUser;
-    // Keep existing browser sessions through the product rename.
-    if (session.id === "demo-admin") session.name = "DuesPilot Admin";
-    if (session.id === "demo-admin" || session.id === "demo-user") {
-      session.email = session.email.replace("@sambhaash.demo", "@duespilot.demo");
-    }
-    return session;
+    return JSON.parse(saved) as DemoUser;
   } catch {
     return null;
   }
@@ -77,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(fromSupabaseUser(data.user));
         return;
       }
-      const normalizedEmail = email.trim().toLowerCase().replace("@sambhaash.demo", "@duespilot.demo");
+      const normalizedEmail = email.trim().toLowerCase();
       const account = DEMO_ACCOUNTS.find((candidate) => candidate.email === normalizedEmail && candidate.password === password);
       if (!account) throw new Error("Use one of the demo accounts shown below.");
       const session: DemoUser = { id: account.id, name: account.name, email: account.email, role: account.role };

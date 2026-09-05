@@ -81,7 +81,7 @@ async def require_recovery_user(credentials: HTTPAuthorizationCredentials | None
     deployment must set AUTH_REQUIRED=true together with Supabase credentials.
     """
     if not settings.auth_required:
-        return {"id": "offline-demo", "email": "offline-demo@sambhaash.local", "role": "admin", "demo_mode": True}
+        return {"id": "offline-demo", "email": "offline-demo@duespilot.local", "role": "admin", "demo_mode": True}
     return await get_current_user(credentials)
 
 

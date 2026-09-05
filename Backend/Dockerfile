@@ -19,8 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create non-root user for security
-RUN useradd -m -u 1000 sambhaash && chown -R sambhaash:sambhaash /app
-USER sambhaash
+RUN useradd -m -u 1000 duespilot && chown -R duespilot:duespilot /app
+USER duespilot
 
 # Force unbuffered stdout/stderr logging
 ENV PYTHONUNBUFFERED=1

@@ -60,7 +60,7 @@ Ensure you populate Backend/.env with active keys:
 - Telephony Credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
 
 Step D: Run a local Redis container instance (Required for task processing queues)
-$ docker run -d --name sambhaash-redis -p 6379:6379 redis:alpine
+$ docker run -d --name duespilot-redis -p 6379:6379 redis:alpine
 
 Step E: Start the FastAPI API Web Application Server
 $ python -m uvicorn main:app --reload

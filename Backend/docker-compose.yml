@@ -4,14 +4,14 @@ services:
   # Redis: In-memory queue for background jobs
   redis:
     image: redis:7-alpine
-    container_name: sambhaash-ai-redis
+    container_name: duespilot-ai-redis
     ports:
       - "6379:6379"
     volumes:
-      - sambhaash-data:/data
+      - duespilot-data:/data
     command: redis-server --appendonly yes
     networks:
-      - sambhaash-network
+      - duespilot-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -26,13 +26,13 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-    container_name: sambhaash-ai-api
+    container_name: duespilot-ai-api
     ports:
       - "8000:8000"
     volumes:
       - .:/app
     networks:
-      - sambhaash-network
+      - duespilot-network
     environment:
       - PYTHONUNBUFFERED=1
       - REDIS_URL=redis://redis:6379
@@ -63,12 +63,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    container_name: sambhaash-ai-worker
+    container_name: duespilot-ai-worker
     volumes:
       - .:/app
-      - sambhaash-logs:/app/logs
+      - duespilot-logs:/app/logs
     networks:
-      - sambhaash-network
+      - duespilot-network
     environment:
       - PYTHONUNBUFFERED=1
       - REDIS_URL=redis://redis:6379
@@ -90,11 +90,11 @@ services:
     restart: unless-stopped
 
 volumes:
-  sambhaash-data:
+  duespilot-data:
     driver: local
-  sambhaash-logs:
+  duespilot-logs:
     driver: local
 
 networks:
-  sambhaash-network:
+  duespilot-network:
     driver: bridge

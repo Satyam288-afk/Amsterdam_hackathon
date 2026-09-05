@@ -192,7 +192,7 @@ This will:
 # Option 2: Run in production (systemd)
 # =====================================
 """
-Create /etc/systemd/system/sambhaash-worker.service:
+Create /etc/systemd/system/duespilot-worker.service:
 
 [Unit]
 Description=DuesPilot Background Worker
@@ -210,10 +210,10 @@ RestartSec=10
 WantedBy=multi-user.target
 
 Commands:
-    sudo systemctl start sambhaash-worker
-    sudo systemctl stop sambhaash-worker
-    sudo systemctl status sambhaash-worker
-    sudo journalctl -u sambhaash-worker -f  # View logs
+    sudo systemctl start duespilot-worker
+    sudo systemctl stop duespilot-worker
+    sudo systemctl status duespilot-worker
+    sudo journalctl -u duespilot-worker -f  # View logs
 """
 
 # Option 3: Run multiple workers (load balancing)

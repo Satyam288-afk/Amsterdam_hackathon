@@ -253,21 +253,21 @@ def calculate_benchmark(cases: List[Dict[str, Any]]) -> Dict[str, Any]:
     evaluated = [c for c in cases if c.get("demo_data")]
     at_risk = sum(money(c["amount"]) for c in evaluated)
     baseline_recovered = 0
-    sambhaash_recovered = 0
+    duespilot_recovered = 0
     baseline_contacts = len(evaluated)
-    sambhaash_contacts = 0
+    duespilot_contacts = 0
     escalations = 0
     promises = 0
     for case in evaluated:
         cause = case.get("cause")
         amount = money(case["amount"])
         baseline_success = cause in {"payment delay", "payment failure"} and case.get("days_overdue", 0) < 15
-        sambhaash_success = cause in {"payment delay", "payment failure", "approval delay"} and not case.get("failed_promise")
+        duespilot_success = cause in {"payment delay", "payment failure", "approval delay"} and not case.get("failed_promise")
         if baseline_success:
             baseline_recovered += amount
-        if sambhaash_success:
-            sambhaash_recovered += amount
-        sambhaash_contacts += min(case.get("attempts", 0) + 1, MAX_AUTOMATED_ATTEMPTS)
+        if duespilot_success:
+            duespilot_recovered += amount
+        duespilot_contacts += min(case.get("attempts", 0) + 1, MAX_AUTOMATED_ATTEMPTS)
         if case.get("recommended_action") == "human_escalation":
             escalations += 1
         if case.get("promise_to_pay_date"):
@@ -278,14 +278,14 @@ def calculate_benchmark(cases: List[Dict[str, Any]]) -> Dict[str, Any]:
         "invoices_evaluated": len(evaluated),
         "amount_at_risk": at_risk,
         "baseline_recovered": baseline_recovered,
-        "sambhaash_recovered": sambhaash_recovered,
+        "duespilot_recovered": duespilot_recovered,
         "baseline_recovery_rate": round(baseline_recovered / at_risk * 100, 1) if at_risk else 0,
-        "recovery_rate": round(sambhaash_recovered / at_risk * 100, 1) if at_risk else 0,
-        "improvement": money(sambhaash_recovered - baseline_recovered),
+        "recovery_rate": round(duespilot_recovered / at_risk * 100, 1) if at_risk else 0,
+        "improvement": money(duespilot_recovered - baseline_recovered),
         "escalations": escalations,
         "promise_to_pay_count": promises,
-        "average_contacts": round(sambhaash_contacts / len(evaluated), 1) if evaluated else 0,
-        "net_recovered_value": money(sambhaash_recovered - (sambhaash_contacts * 12)),
+        "average_contacts": round(duespilot_contacts / len(evaluated), 1) if evaluated else 0,
+        "net_recovered_value": money(duespilot_recovered - (duespilot_contacts * 12)),
     }
 
 
@@ -452,7 +452,7 @@ class RecoveryStore:
         if case.get("status") == "PROMISE_TO_PAY" and case.get("promise_to_pay_date"):
             self._refresh_policy(case)
             return deepcopy(case)
-        extracted = extract_promise_to_pay(customer_text, money(case["amount"]), date(2026, 8, 29))
+        extracted = extract_promise_to_pay(customer_text, money(case["amount"]), date.today())
         if not extracted["promise_to_pay"]:
             raise ValueError("No promise-to-pay signal found in customer response")
         final_date = promise_date or extracted["date"]

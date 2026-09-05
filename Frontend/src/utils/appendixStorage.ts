@@ -11,7 +11,7 @@ export type AppendixFile = {
   size: number;
 };
 
-const STORAGE_KEY = "sambhaash_appendix_files";
+const STORAGE_KEY = "duespilot_appendix_files";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 // Upload a file to local storage

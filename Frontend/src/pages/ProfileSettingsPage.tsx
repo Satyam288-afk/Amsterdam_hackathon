@@ -6,7 +6,7 @@ import { supabase } from "../services/supabase";
 export const ProfileSettingsPage: React.FC = () => {
   const [profile, setProfile] = useState({
     name: "ADMIN",
-    email: "admin@sambhaash.ai",
+    email: "admin@duespilot.ai",
     role: "Administrator",
     avatar: ""
   });
@@ -41,7 +41,7 @@ export const ProfileSettingsPage: React.FC = () => {
             const parsed = JSON.parse(saved);
             setProfile({
               name: parsed.name || "ADMIN",
-              email: parsed.email || "admin@sambhaash.ai",
+              email: parsed.email || "admin@duespilot.ai",
               role: parsed.role || "Administrator",
               avatar: parsed.avatar || ""
             });
@@ -109,7 +109,7 @@ export const ProfileSettingsPage: React.FC = () => {
           
           <h2 className="text-xl font-black text-[#2d1e18] font-display">{profile.name || "ADMIN"}</h2>
           <p className="text-[10px] text-[#3d2b1f] uppercase font-black tracking-widest mt-1 bg-[#faedcd] px-3 py-1 rounded-lg border border-[#d4a373]/20">{profile.role || "Administrator"}</p>
-          <p className="text-xs font-semibold text-[#3d2b1f]/50 mt-2 break-all">{profile.email || "admin@sambhaash.ai"}</p>
+          <p className="text-xs font-semibold text-[#3d2b1f]/50 mt-2 break-all">{profile.email || "admin@duespilot.ai"}</p>
         </div>
 
         {/* Right Side: Edit Form */}

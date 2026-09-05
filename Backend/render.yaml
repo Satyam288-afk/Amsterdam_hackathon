@@ -1,13 +1,13 @@
 services:
   # 1. Redis Instance
   - type: redis
-    name: sambhaash-redis
+    name: duespilot-redis
     plan: free
     ipAllowList: [] # empty means only other services in the same Render team can connect (secure)
 
   # 2. FastAPI Web Service
   - type: web
-    name: sambhaash-api
+    name: duespilot-api
     runtime: docker
     plan: free
     dockerfilePath: Backend/Dockerfile
@@ -18,7 +18,7 @@ services:
       - key: REDIS_URL
         fromService:
           type: redis
-          name: sambhaash-redis
+          name: duespilot-redis
           property: connectionString
       - key: DATABASE_URL
         sync: false # User will provide this in Render dashboard

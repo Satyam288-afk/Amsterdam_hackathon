@@ -43,7 +43,7 @@ def main() -> None:
     print(f"Invoices evaluated: {result['invoices_evaluated']}")
     print(f"Revenue at risk: {format_inr(result['amount_at_risk'])}")
     print(f"Baseline recovered: {format_inr(result['baseline_recovered'])} ({result['baseline_recovery_rate']}%)")
-    print(f"DuesPilot recovered: {format_inr(result['sambhaash_recovered'])} ({result['recovery_rate']}%)")
+    print(f"DuesPilot recovered: {format_inr(result['duespilot_recovered'])} ({result['recovery_rate']}%)")
     print(f"Recovery uplift: {format_inr(result['improvement'])}")
     print(f"Average contacts: {result['average_contacts']}")
     print(f"Escalations: {result['escalations']}; promise-to-pay cases: {result['promise_to_pay_count']}")
