@@ -1,3 +1,5 @@
+# DuesPilot repository exclusions
+
 # Virtual Environment
 Backend/venv/
 venv/
@@ -74,5 +76,4 @@ htmlcov/
 .env
 Backend/env
 Backend/.env
-
 
